@@ -128,6 +128,9 @@ POST /api/citas
 
 | Nombre | Rol |
 |--------|-----|
-| Integrante 1 | Backend - Módulo Citas |
-| Integrante 2 | Backend - Módulo Pacientes |
-| Integrante 3 | Backend - Módulo Médicos / Documentación |
+| Jesus Reymundo Román | Backend - Módulo Citas / Líder técnico |
+| Aldair Santos Cahuana | Backend - Módulo Pacientes |
+| Reyes Zarate Leomarc | Backend - Módulo Médicos |
+| Ivan Zarate Soncco | Backend - Validaciones y DTOs |
+| Crhistian Meza Cardenas | Backend - Manejo de excepciones |
+| Alexandee Morillo Campos | Documentación y pruebas Postman |
