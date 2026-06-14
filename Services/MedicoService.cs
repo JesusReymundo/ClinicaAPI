@@ -1,86 +1,129 @@
+using ClinicaAPI.Data;
 using ClinicaAPI.DTOs;
 using ClinicaAPI.Exceptions;
 using ClinicaAPI.Models;
 using ClinicaAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaAPI.Services;
 
 public class MedicoService : IMedicoService
 {
-    private readonly List<Medico> _medicos = new();
-    private int _nextId = 1;
+    private readonly ClinicaDbContext _db;
 
-    public MedicoService()
-    {
-        _medicos.Add(new Medico { Id = _nextId++, Nombre = "Carlos", Apellido = "López", Especialidad = "Cardiología", ColegioMedico = "CMP-12345", Telefono = "999888777" });
-        _medicos.Add(new Medico { Id = _nextId++, Nombre = "Ana", Apellido = "Torres", Especialidad = "Pediatría", ColegioMedico = "CMP-67890", Telefono = "998877665" });
-    }
+    public MedicoService(ClinicaDbContext db) => _db = db;
 
     public IEnumerable<MedicoResponseDto> ObtenerTodos() =>
-        _medicos.Select(MapToDto);
+        _db.Medicos
+            .Include(m => m.Usuario)
+            .Include(m => m.EspecialidadNav)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
 
     public MedicoResponseDto ObtenerPorId(int id)
     {
-        var medico = _medicos.FirstOrDefault(m => m.Id == id)
+        var medico = _db.Medicos
+            .Include(m => m.Usuario)
+            .Include(m => m.EspecialidadNav)
+            .AsNoTracking()
+            .FirstOrDefault(m => m.IdMedico == id)
             ?? throw new NotFoundException($"Médico con ID {id} no encontrado");
         return MapToDto(medico);
     }
 
     public IEnumerable<MedicoResponseDto> ObtenerPorEspecialidad(string especialidad) =>
-        _medicos
-            .Where(m => m.Especialidad.Contains(especialidad, StringComparison.OrdinalIgnoreCase))
-            .Select(MapToDto);
+        _db.Medicos
+            .Include(m => m.Usuario)
+            .Include(m => m.EspecialidadNav)
+            .AsNoTracking()
+            .Where(m => m.EspecialidadNav!.Nombre.Contains(especialidad))
+            .Select(MapToDto)
+            .ToList();
 
     public MedicoResponseDto Crear(MedicoCreateDto dto)
     {
-        if (_medicos.Any(m => m.ColegioMedico == dto.ColegioMedico))
+        if (_db.Medicos.Any(m => m.ColegioMedico == dto.ColegioMedico))
             throw new BusinessException($"Ya existe un médico con el número de colegio {dto.ColegioMedico}");
+
+        var especialidad = _db.Especialidades.FirstOrDefault(e => e.Nombre == dto.Especialidad)
+            ?? new Especialidad { Nombre = dto.Especialidad, Activo = true };
+        if (especialidad.IdEspecialidad == 0)
+        {
+            _db.Especialidades.Add(especialidad);
+            _db.SaveChanges();
+        }
+
+        var usuario = new Usuario
+        {
+            IdRol = 2,
+            Nombres = dto.Nombre,
+            Apellidos = dto.Apellido,
+            DNI = dto.ColegioMedico.Replace("-", "").PadLeft(8, '0')[..8],
+            Username = dto.ColegioMedico,
+            PasswordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(dto.ColegioMedico)),
+            Activo = true
+        };
+        _db.Usuarios.Add(usuario);
+        _db.SaveChanges();
+
+        if (!string.IsNullOrEmpty(dto.Telefono))
+            _db.Contactos.Add(new Contacto { IdUsuario = usuario.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono, EsPrincipal = true });
+        _db.SaveChanges();
 
         var medico = new Medico
         {
-            Id = _nextId++,
-            Nombre = dto.Nombre,
-            Apellido = dto.Apellido,
-            Especialidad = dto.Especialidad,
-            ColegioMedico = dto.ColegioMedico,
-            Telefono = dto.Telefono
+            IdUsuario = usuario.IdUsuario,
+            IdEspecialidad = especialidad.IdEspecialidad,
+            ColegioMedico = dto.ColegioMedico
         };
+        _db.Medicos.Add(medico);
+        _db.SaveChanges();
 
-        _medicos.Add(medico);
-        return MapToDto(medico);
+        return ObtenerPorId(medico.IdMedico);
     }
 
     public MedicoResponseDto Actualizar(int id, MedicoUpdateDto dto)
     {
-        var medico = _medicos.FirstOrDefault(m => m.Id == id)
+        var medico = _db.Medicos.Include(m => m.Usuario).FirstOrDefault(m => m.IdMedico == id)
             ?? throw new NotFoundException($"Médico con ID {id} no encontrado");
 
-        if (_medicos.Any(m => m.ColegioMedico == dto.ColegioMedico && m.Id != id))
+        if (_db.Medicos.Any(m => m.ColegioMedico == dto.ColegioMedico && m.IdMedico != id))
             throw new BusinessException($"Ya existe otro médico con el número de colegio {dto.ColegioMedico}");
 
-        medico.Nombre = dto.Nombre;
-        medico.Apellido = dto.Apellido;
-        medico.Especialidad = dto.Especialidad;
-        medico.ColegioMedico = dto.ColegioMedico;
-        medico.Telefono = dto.Telefono;
+        var especialidad = _db.Especialidades.FirstOrDefault(e => e.Nombre == dto.Especialidad)
+            ?? new Especialidad { Nombre = dto.Especialidad, Activo = true };
+        if (especialidad.IdEspecialidad == 0) { _db.Especialidades.Add(especialidad); _db.SaveChanges(); }
 
-        return MapToDto(medico);
+        medico.Usuario!.Nombres = dto.Nombre;
+        medico.Usuario.Apellidos = dto.Apellido;
+        medico.Usuario.FechaModificacion = DateTime.Now;
+        medico.ColegioMedico = dto.ColegioMedico;
+        medico.IdEspecialidad = especialidad.IdEspecialidad;
+
+        var telContacto = _db.Contactos.FirstOrDefault(c => c.IdUsuario == medico.IdUsuario && c.TipoContacto == "Telefono");
+        if (telContacto != null) telContacto.Valor = dto.Telefono;
+        else _db.Contactos.Add(new Contacto { IdUsuario = medico.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono });
+
+        _db.SaveChanges();
+        return ObtenerPorId(id);
     }
 
     public void Eliminar(int id)
     {
-        var medico = _medicos.FirstOrDefault(m => m.Id == id)
+        var medico = _db.Medicos.FirstOrDefault(m => m.IdMedico == id)
             ?? throw new NotFoundException($"Médico con ID {id} no encontrado");
-        _medicos.Remove(medico);
+        _db.Medicos.Remove(medico);
+        _db.SaveChanges();
     }
 
     private static MedicoResponseDto MapToDto(Medico m) => new()
     {
-        Id = m.Id,
-        Nombre = m.Nombre,
-        Apellido = m.Apellido,
-        Especialidad = m.Especialidad,
+        Id = m.IdMedico,
+        Nombre = m.Usuario?.Nombres ?? string.Empty,
+        Apellido = m.Usuario?.Apellidos ?? string.Empty,
+        Especialidad = m.EspecialidadNav?.Nombre ?? string.Empty,
         ColegioMedico = m.ColegioMedico,
-        Telefono = m.Telefono
+        Telefono = string.Empty
     };
 }

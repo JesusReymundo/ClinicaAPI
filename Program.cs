@@ -1,7 +1,9 @@
+using ClinicaAPI.Data;
 using ClinicaAPI.Exceptions;
 using ClinicaAPI.Services;
 using ClinicaAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,9 +33,12 @@ builder.Services.AddControllers()
         };
     });
 
-builder.Services.AddSingleton<IPacienteService, PacienteService>();
-builder.Services.AddSingleton<IMedicoService, MedicoService>();
-builder.Services.AddSingleton<ICitaService, CitaService>();
+builder.Services.AddDbContext<ClinicaDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicaDB")));
+
+builder.Services.AddScoped<IPacienteService, PacienteService>();
+builder.Services.AddScoped<IMedicoService, MedicoService>();
+builder.Services.AddScoped<ICitaService, CitaService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

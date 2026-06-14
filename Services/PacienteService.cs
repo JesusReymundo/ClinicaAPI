@@ -1,84 +1,120 @@
+using ClinicaAPI.Data;
 using ClinicaAPI.DTOs;
 using ClinicaAPI.Exceptions;
 using ClinicaAPI.Models;
 using ClinicaAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaAPI.Services;
 
 public class PacienteService : IPacienteService
 {
-    private readonly List<Paciente> _pacientes = new();
-    private int _nextId = 1;
+    private readonly ClinicaDbContext _db;
 
-    public PacienteService()
-    {
-        _pacientes.Add(new Paciente { Id = _nextId++, Nombre = "Juan", Apellido = "Pérez", Dni = "12345678", Telefono = "987654321", Email = "juan@email.com", FechaNacimiento = new DateTime(1990, 5, 15) });
-        _pacientes.Add(new Paciente { Id = _nextId++, Nombre = "María", Apellido = "García", Dni = "87654321", Telefono = "912345678", Email = "maria@email.com", FechaNacimiento = new DateTime(1985, 8, 22) });
-    }
+    public PacienteService(ClinicaDbContext db) => _db = db;
 
     public IEnumerable<PacienteResponseDto> ObtenerTodos() =>
-        _pacientes.Select(MapToDto);
+        _db.Pacientes
+            .Include(p => p.Usuario)
+            .Include(p => p.TipoAsegurado)
+            .Include(p => p.Empresa)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
 
     public PacienteResponseDto ObtenerPorId(int id)
     {
-        var paciente = _pacientes.FirstOrDefault(p => p.Id == id)
+        var paciente = _db.Pacientes
+            .Include(p => p.Usuario)
+            .Include(p => p.TipoAsegurado)
+            .Include(p => p.Empresa)
+            .AsNoTracking()
+            .FirstOrDefault(p => p.IdPaciente == id)
             ?? throw new NotFoundException($"Paciente con ID {id} no encontrado");
         return MapToDto(paciente);
     }
 
     public PacienteResponseDto Crear(PacienteCreateDto dto)
     {
-        if (_pacientes.Any(p => p.Dni == dto.Dni))
+        if (_db.Usuarios.Any(u => u.DNI == dto.Dni))
             throw new BusinessException($"Ya existe un paciente con el DNI {dto.Dni}");
+
+        var usuario = new Usuario
+        {
+            IdRol = 3,
+            Nombres = dto.Nombre,
+            Apellidos = dto.Apellido,
+            DNI = dto.Dni,
+            FechaNacimiento = dto.FechaNacimiento,
+            Username = dto.Dni,
+            PasswordHash = BCryptHash(dto.Dni),
+            Activo = true
+        };
+        _db.Usuarios.Add(usuario);
+        _db.SaveChanges();
+
+        if (!string.IsNullOrEmpty(dto.Telefono))
+            _db.Contactos.Add(new Contacto { IdUsuario = usuario.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono, EsPrincipal = true });
+        if (!string.IsNullOrEmpty(dto.Email))
+            _db.Contactos.Add(new Contacto { IdUsuario = usuario.IdUsuario, TipoContacto = "Email", Valor = dto.Email, EsPrincipal = true });
+        _db.SaveChanges();
 
         var paciente = new Paciente
         {
-            Id = _nextId++,
-            Nombre = dto.Nombre,
-            Apellido = dto.Apellido,
-            Dni = dto.Dni,
-            Telefono = dto.Telefono,
-            Email = dto.Email,
-            FechaNacimiento = dto.FechaNacimiento
+            IdUsuario = usuario.IdUsuario,
+            IdTipoAsegurado = 1
         };
+        _db.Pacientes.Add(paciente);
+        _db.SaveChanges();
 
-        _pacientes.Add(paciente);
-        return MapToDto(paciente);
+        return ObtenerPorId(paciente.IdPaciente);
     }
 
     public PacienteResponseDto Actualizar(int id, PacienteUpdateDto dto)
     {
-        var paciente = _pacientes.FirstOrDefault(p => p.Id == id)
+        var paciente = _db.Pacientes.Include(p => p.Usuario).FirstOrDefault(p => p.IdPaciente == id)
             ?? throw new NotFoundException($"Paciente con ID {id} no encontrado");
 
-        if (_pacientes.Any(p => p.Dni == dto.Dni && p.Id != id))
+        if (_db.Usuarios.Any(u => u.DNI == dto.Dni && u.IdUsuario != paciente.IdUsuario))
             throw new BusinessException($"Ya existe otro paciente con el DNI {dto.Dni}");
 
-        paciente.Nombre = dto.Nombre;
-        paciente.Apellido = dto.Apellido;
-        paciente.Dni = dto.Dni;
-        paciente.Telefono = dto.Telefono;
-        paciente.Email = dto.Email;
-        paciente.FechaNacimiento = dto.FechaNacimiento;
+        paciente.Usuario!.Nombres = dto.Nombre;
+        paciente.Usuario.Apellidos = dto.Apellido;
+        paciente.Usuario.DNI = dto.Dni;
+        paciente.Usuario.FechaNacimiento = dto.FechaNacimiento;
+        paciente.Usuario.FechaModificacion = DateTime.Now;
 
-        return MapToDto(paciente);
+        var telContacto = _db.Contactos.FirstOrDefault(c => c.IdUsuario == paciente.IdUsuario && c.TipoContacto == "Telefono");
+        if (telContacto != null) telContacto.Valor = dto.Telefono;
+        else _db.Contactos.Add(new Contacto { IdUsuario = paciente.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono });
+
+        var emailContacto = _db.Contactos.FirstOrDefault(c => c.IdUsuario == paciente.IdUsuario && c.TipoContacto == "Email");
+        if (emailContacto != null) emailContacto.Valor = dto.Email;
+        else _db.Contactos.Add(new Contacto { IdUsuario = paciente.IdUsuario, TipoContacto = "Email", Valor = dto.Email });
+
+        _db.SaveChanges();
+        return ObtenerPorId(id);
     }
 
     public void Eliminar(int id)
     {
-        var paciente = _pacientes.FirstOrDefault(p => p.Id == id)
+        var paciente = _db.Pacientes.FirstOrDefault(p => p.IdPaciente == id)
             ?? throw new NotFoundException($"Paciente con ID {id} no encontrado");
-        _pacientes.Remove(paciente);
+        _db.Pacientes.Remove(paciente);
+        _db.SaveChanges();
     }
+
+    private static string BCryptHash(string value) =>
+        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(value));
 
     private static PacienteResponseDto MapToDto(Paciente p) => new()
     {
-        Id = p.Id,
-        Nombre = p.Nombre,
-        Apellido = p.Apellido,
-        Dni = p.Dni,
-        Telefono = p.Telefono,
-        Email = p.Email,
-        FechaNacimiento = p.FechaNacimiento
+        Id = p.IdPaciente,
+        Nombre = p.Usuario?.Nombres ?? string.Empty,
+        Apellido = p.Usuario?.Apellidos ?? string.Empty,
+        Dni = p.Usuario?.DNI ?? string.Empty,
+        Telefono = string.Empty,
+        Email = string.Empty,
+        FechaNacimiento = p.Usuario?.FechaNacimiento ?? DateTime.MinValue
     };
 }

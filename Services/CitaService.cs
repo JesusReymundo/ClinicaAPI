@@ -1,67 +1,95 @@
+using ClinicaAPI.Data;
 using ClinicaAPI.DTOs;
 using ClinicaAPI.Exceptions;
 using ClinicaAPI.Models;
 using ClinicaAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaAPI.Services;
 
 public class CitaService : ICitaService
 {
-    private readonly List<Cita> _citas = new();
-    private readonly IPacienteService _pacienteService;
-    private readonly IMedicoService _medicoService;
-    private int _nextId = 1;
+    private readonly ClinicaDbContext _db;
 
-    public CitaService(IPacienteService pacienteService, IMedicoService medicoService)
-    {
-        _pacienteService = pacienteService;
-        _medicoService = medicoService;
-    }
+    public CitaService(ClinicaDbContext db) => _db = db;
 
     public IEnumerable<CitaResponseDto> ObtenerTodas() =>
-        _citas.Select(MapToDto);
+        _db.Citas
+            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
 
     public CitaResponseDto ObtenerPorId(int id)
     {
-        var cita = _citas.FirstOrDefault(c => c.Id == id)
+        var cita = _db.Citas
+            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+            .AsNoTracking()
+            .FirstOrDefault(c => c.Id == id)
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
         return MapToDto(cita);
     }
 
     public IEnumerable<CitaResponseDto> ObtenerPorPaciente(int pacienteId)
     {
-        _pacienteService.ObtenerPorId(pacienteId);
-        return _citas.Where(c => c.PacienteId == pacienteId).Select(MapToDto);
+        if (!_db.Pacientes.Any(p => p.IdPaciente == pacienteId))
+            throw new NotFoundException($"Paciente con ID {pacienteId} no encontrado");
+        return _db.Citas
+            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+            .Where(c => c.PacienteId == pacienteId)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
     }
 
     public IEnumerable<CitaResponseDto> ObtenerPorMedico(int medicoId)
     {
-        _medicoService.ObtenerPorId(medicoId);
-        return _citas.Where(c => c.MedicoId == medicoId).Select(MapToDto);
+        if (!_db.Medicos.Any(m => m.IdMedico == medicoId))
+            throw new NotFoundException($"Médico con ID {medicoId} no encontrado");
+        return _db.Citas
+            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+            .Where(c => c.MedicoId == medicoId)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
     }
 
     public IEnumerable<CitaResponseDto> ObtenerPorEstado(EstadoCita estado) =>
-        _citas.Where(c => c.Estado == estado).Select(MapToDto);
+        _db.Citas
+            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
+            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+            .Where(c => c.IdEstado == (int)estado)
+            .AsNoTracking()
+            .Select(MapToDto)
+            .ToList();
 
     public CitaResponseDto Crear(CitaCreateDto dto)
     {
-        var paciente = _pacienteService.ObtenerPorId(dto.PacienteId);
-        var medico = _medicoService.ObtenerPorId(dto.MedicoId);
-
+        if (!_db.Pacientes.Any(p => p.IdPaciente == dto.PacienteId))
+            throw new NotFoundException($"Paciente con ID {dto.PacienteId} no encontrado");
+        if (!_db.Medicos.Any(m => m.IdMedico == dto.MedicoId))
+            throw new NotFoundException($"Médico con ID {dto.MedicoId} no encontrado");
         if (dto.FechaHora <= DateTime.Now)
             throw new BusinessException("La fecha de la cita debe ser futura");
 
-        var conflicto = _citas.Any(c =>
+        var conflicto = _db.Citas.Any(c =>
             c.MedicoId == dto.MedicoId &&
-            c.Estado != EstadoCita.Cancelada &&
-            Math.Abs((c.FechaHora - dto.FechaHora).TotalMinutes) < 30);
-
+            c.IdEstado != (int)EstadoCita.Cancelada &&
+            Math.Abs(EF.Functions.DateDiffMinute(c.FechaHora, dto.FechaHora)) < 30);
         if (conflicto)
             throw new BusinessException("El médico ya tiene una cita en ese horario (margen de 30 minutos)");
 
         var cita = new Cita
         {
-            Id = _nextId++,
             PacienteId = dto.PacienteId,
             MedicoId = dto.MedicoId,
             FechaHora = dto.FechaHora,
@@ -69,22 +97,21 @@ public class CitaService : ICitaService
             Observaciones = dto.Observaciones,
             Estado = EstadoCita.Pendiente
         };
-
-        _citas.Add(cita);
-        return MapToDto(cita);
+        _db.Citas.Add(cita);
+        _db.SaveChanges();
+        return ObtenerPorId(cita.Id);
     }
 
     public CitaResponseDto Actualizar(int id, CitaUpdateDto dto)
     {
-        var cita = _citas.FirstOrDefault(c => c.Id == id)
+        var cita = _db.Citas.FirstOrDefault(c => c.Id == id)
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
-
         if (cita.Estado == EstadoCita.Cancelada)
             throw new BusinessException("No se puede modificar una cita cancelada");
-
-        _pacienteService.ObtenerPorId(dto.PacienteId);
-        _medicoService.ObtenerPorId(dto.MedicoId);
-
+        if (!_db.Pacientes.Any(p => p.IdPaciente == dto.PacienteId))
+            throw new NotFoundException($"Paciente con ID {dto.PacienteId} no encontrado");
+        if (!_db.Medicos.Any(m => m.IdMedico == dto.MedicoId))
+            throw new NotFoundException($"Médico con ID {dto.MedicoId} no encontrado");
         if (dto.FechaHora <= DateTime.Now)
             throw new BusinessException("La fecha de la cita debe ser futura");
 
@@ -94,52 +121,47 @@ public class CitaService : ICitaService
         cita.Motivo = dto.Motivo;
         cita.Observaciones = dto.Observaciones;
         cita.Estado = dto.Estado;
-
-        return MapToDto(cita);
+        cita.FechaModificacion = DateTime.Now;
+        _db.SaveChanges();
+        return ObtenerPorId(id);
     }
 
     public CitaResponseDto Cancelar(int id)
     {
-        var cita = _citas.FirstOrDefault(c => c.Id == id)
+        var cita = _db.Citas.FirstOrDefault(c => c.Id == id)
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
-
         if (cita.Estado == EstadoCita.Cancelada)
             throw new BusinessException("La cita ya está cancelada");
-
         if (cita.Estado == EstadoCita.Completada)
             throw new BusinessException("No se puede cancelar una cita que ya fue completada");
 
         cita.Estado = EstadoCita.Cancelada;
-        return MapToDto(cita);
+        cita.FechaModificacion = DateTime.Now;
+        _db.SaveChanges();
+        return ObtenerPorId(id);
     }
 
     public void Eliminar(int id)
     {
-        var cita = _citas.FirstOrDefault(c => c.Id == id)
+        var cita = _db.Citas.FirstOrDefault(c => c.Id == id)
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
-        _citas.Remove(cita);
+        _db.Citas.Remove(cita);
+        _db.SaveChanges();
     }
 
-    private CitaResponseDto MapToDto(Cita c)
+    private static CitaResponseDto MapToDto(Cita c) => new()
     {
-        PacienteResponseDto? paciente = null;
-        MedicoResponseDto? medico = null;
-
-        try { paciente = _pacienteService.ObtenerPorId(c.PacienteId); } catch { }
-        try { medico = _medicoService.ObtenerPorId(c.MedicoId); } catch { }
-
-        return new CitaResponseDto
-        {
-            Id = c.Id,
-            PacienteId = c.PacienteId,
-            NombrePaciente = paciente != null ? $"{paciente.Nombre} {paciente.Apellido}" : "Desconocido",
-            MedicoId = c.MedicoId,
-            NombreMedico = medico != null ? $"Dr. {medico.Nombre} {medico.Apellido}" : "Desconocido",
-            EspecialidadMedico = medico?.Especialidad ?? string.Empty,
-            FechaHora = c.FechaHora,
-            Motivo = c.Motivo,
-            Estado = c.Estado,
-            Observaciones = c.Observaciones
-        };
-    }
+        Id = c.Id,
+        PacienteId = c.PacienteId,
+        NombrePaciente = c.Paciente?.Usuario != null
+            ? $"{c.Paciente.Usuario.Nombres} {c.Paciente.Usuario.Apellidos}" : "Desconocido",
+        MedicoId = c.MedicoId,
+        NombreMedico = c.MedicoNav?.Usuario != null
+            ? $"Dr. {c.MedicoNav.Usuario.Nombres} {c.MedicoNav.Usuario.Apellidos}" : "Desconocido",
+        EspecialidadMedico = c.MedicoNav?.EspecialidadNav?.Nombre ?? string.Empty,
+        FechaHora = c.FechaHora,
+        Motivo = c.Motivo,
+        Estado = c.Estado,
+        Observaciones = c.Observaciones
+    };
 }
