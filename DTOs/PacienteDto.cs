@@ -27,6 +27,12 @@ public class PacienteCreateDto
 
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
     public DateTime FechaNacimiento { get; set; }
+
+    [StringLength(5)]
+    public string? GrupoSanguineo { get; set; }
+
+    [StringLength(500)]
+    public string? Alergias { get; set; }
 }
 
 public class PacienteUpdateDto : PacienteCreateDto { }
@@ -41,4 +47,6 @@ public class PacienteResponseDto
     public string Telefono { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public DateTime FechaNacimiento { get; set; }
+    public string GrupoSanguineo { get; set; } = string.Empty;
+    public string Alergias { get; set; } = string.Empty;
 }

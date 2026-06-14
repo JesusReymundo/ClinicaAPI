@@ -56,14 +56,14 @@ public class CitasController : ControllerBase
         return Ok(new { success = true, data = citas });
     }
 
-    /// <summary>Filtra citas por estado (Pendiente, Confirmada, Cancelada, Completada)</summary>
+    /// <summary>Filtra citas por estado (Pendiente, Confirmada, Cancelada, Completada, Anulada)</summary>
     [HttpGet("estado/{estado}")]
     [ProducesResponseType(typeof(IEnumerable<CitaResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult ObtenerPorEstado(string estado)
     {
         if (!Enum.TryParse<EstadoCita>(estado, true, out var estadoEnum))
-            return BadRequest(new { success = false, message = $"Estado '{estado}' no válido. Valores aceptados: Pendiente, Confirmada, Cancelada, Completada" });
+            return BadRequest(new { success = false, message = $"Estado '{estado}' no válido. Valores aceptados: Pendiente, Confirmada, Cancelada, Completada, Anulada" });
 
         var citas = _citaService.ObtenerPorEstado(estadoEnum);
         return Ok(new { success = true, data = citas });
@@ -92,7 +92,7 @@ public class CitasController : ControllerBase
         return Ok(new { success = true, message = "Cita actualizada exitosamente", data = cita });
     }
 
-    /// <summary>Cancela una cita médica</summary>
+    /// <summary>Cancela una cita médica (acción de la clínica/médico)</summary>
     [HttpPatch("{id:int}/cancelar")]
     [ProducesResponseType(typeof(CitaResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -101,6 +101,17 @@ public class CitasController : ControllerBase
     {
         var cita = _citaService.Cancelar(id);
         return Ok(new { success = true, message = "Cita cancelada exitosamente", data = cita });
+    }
+
+    /// <summary>Anula una cita médica (acción del propio paciente)</summary>
+    [HttpPatch("{id:int}/anular")]
+    [ProducesResponseType(typeof(CitaResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult Anular(int id)
+    {
+        var cita = _citaService.Anular(id);
+        return Ok(new { success = true, message = "Cita anulada por el paciente", data = cita });
     }
 
     /// <summary>Elimina una cita médica por su ID</summary>

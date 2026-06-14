@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Diagrama ER - ClinicaDB</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; padding: 20px; }
+  h1 { text-align: center; color: #6B21A8; margin-bottom: 6px; font-size: 28px; }
+  p.sub { text-align: center; color: #555; margin-bottom: 20px; font-size: 14px; }
+  .diagrama { background: white; border-radius: 12px; padding: 20px;
+              box-shadow: 0 4px 20px rgba(107,33,168,0.15); overflow-x: auto; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; justify-content: center; }
+  .ley-item { display: flex; align-items: center; gap: 8px; background: white;
+              padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 13px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<h1>Diagrama Entidad-Relación — ClinicaDB</h1>
+<p class="sub">Sistema de Gestión de Citas Médicas · IDAT 5to Ciclo · Desarrollo de Servicios Web</p>
+
+<div class="diagrama">
+<div class="mermaid">
+erDiagram
+    ROLES {
+        int IdRol PK
+        varchar NombreRol
+        varchar Descripcion
+        bit Activo
+    }
+    USUARIOS {
+        int IdUsuario PK
+        int IdRol FK
+        varchar Nombres
+        varchar Apellidos
+        varchar DNI
+        date FechaNacimiento
+        varchar Username
+        varchar PasswordHash
+        bit Activo
+    }
+    CONTACTOS {
+        int IdContacto PK
+        int IdUsuario FK
+        varchar TipoContacto
+        varchar Valor
+        bit EsPrincipal
+    }
+    EMPRESAS {
+        int IdEmpresa PK
+        varchar RazonSocial
+        varchar RUC
+        varchar Direccion
+        varchar Telefono
+        varchar Email
+    }
+    TIPOASEGURADO {
+        int IdTipo PK
+        varchar Nombre
+    }
+    ESPECIALIDADES {
+        int IdEspecialidad PK
+        varchar Nombre
+        varchar Descripcion
+    }
+    MEDICOS {
+        int IdMedico PK
+        int IdUsuario FK
+        int IdEspecialidad FK
+        varchar ColegioMedico
+        varchar Consultorio
+        decimal TarifaConsulta
+    }
+    PACIENTES {
+        int IdPaciente PK
+        int IdUsuario FK
+        int IdTipoAsegurado FK
+        int IdEmpresa FK
+        varchar NumeroSeguro
+        varchar GrupoSanguineo
+        varchar Alergias
+    }
+    ESTADOSCITA {
+        int IdEstado PK
+        varchar Nombre
+    }
+    CITAS {
+        int IdCita PK
+        int PacienteId FK
+        int MedicoId FK
+        int IdEstado FK
+        datetime FechaHora
+        varchar Motivo
+        varchar Observaciones
+    }
+    RECETAS {
+        int IdReceta PK
+        int IdCita FK
+        varchar Diagnostico
+        varchar Indicaciones
+        datetime FechaEmision
+    }
+    MEDICAMENTOS {
+        int IdMedicamento PK
+        varchar Nombre
+        varchar Presentacion
+        varchar Concentracion
+        decimal Precio
+        int Stock
+    }
+    DETALLERECETA {
+        int IdDetalle PK
+        int IdReceta FK
+        int IdMedicamento FK
+        varchar Dosis
+        varchar Frecuencia
+        int Cantidad
+    }
+    FACTURAS {
+        int IdFactura PK
+        int IdCita FK
+        varchar NumeroFactura
+        decimal Subtotal
+        decimal IGV
+        decimal Total
+        varchar EstadoPago
+    }
+    PAGOS {
+        int IdPago PK
+        int IdFactura FK
+        int IdMetodo FK
+        decimal Monto
+        varchar NroOperacion
+    }
+    METODOSPAGO {
+        int IdMetodo PK
+        varchar Nombre
+    }
+    HORARIOMEDICO {
+        int IdHorario PK
+        int IdMedico FK
+        tinyint DiaSemana
+        time HoraInicio
+        time HoraFin
+    }
+    TRIAJE {
+        int IdTriaje PK
+        int IdCita FK
+        decimal Peso
+        decimal Talla
+        int PresionSistolica
+        decimal Temperatura
+    }
+    HISTORIALCLINICO {
+        int IdHistorial PK
+        int IdPaciente FK
+        int IdCita FK
+        varchar Diagnostico
+        varchar Tratamiento
+    }
+    SEGUROS {
+        int IdSeguro PK
+        int IdPaciente FK
+        varchar NombreSeguro
+        varchar NumeroPoliza
+        date FechaVigencia
+    }
+
+    ROLES           ||--o{ USUARIOS         : "tiene"
+    USUARIOS        ||--o{ CONTACTOS        : "posee"
+    USUARIOS        ||--o| MEDICOS          : "es"
+    USUARIOS        ||--o| PACIENTES        : "es"
+    ESPECIALIDADES  ||--o{ MEDICOS          : "pertenece"
+    TIPOASEGURADO   ||--o{ PACIENTES        : "clasifica"
+    EMPRESAS        ||--o{ PACIENTES        : "asegura"
+    PACIENTES       ||--o{ CITAS            : "agenda"
+    MEDICOS         ||--o{ CITAS            : "atiende"
+    ESTADOSCITA     ||--o{ CITAS            : "tiene"
+    CITAS           ||--o| RECETAS          : "genera"
+    CITAS           ||--o| FACTURAS         : "factura"
+    CITAS           ||--o| TRIAJE           : "tiene"
+    CITAS           ||--o{ HISTORIALCLINICO : "registra"
+    RECETAS         ||--o{ DETALLERECETA    : "contiene"
+    MEDICAMENTOS    ||--o{ DETALLERECETA    : "incluye"
+    FACTURAS        ||--o{ PAGOS            : "recibe"
+    METODOSPAGO     ||--o{ PAGOS            : "usa"
+    MEDICOS         ||--o{ HORARIOMEDICO    : "tiene"
+    PACIENTES       ||--o{ HISTORIALCLINICO : "acumula"
+    PACIENTES       ||--o{ SEGUROS          : "posee"
+</div>
+</div>
+
+<div class="leyenda">
+  <div class="ley-item"><div class="dot" style="background:#6B21A8"></div>Tabla Madre: USUARIOS</div>
+  <div class="ley-item"><div class="dot" style="background:#3B82F6"></div>Entidades principales: PACIENTES, MEDICOS</div>
+  <div class="ley-item"><div class="dot" style="background:#10B981"></div>Centro del sistema: CITAS</div>
+  <div class="ley-item"><div class="dot" style="background:#F59E0B"></div>Complementarios: RECETAS, FACTURAS</div>
+  <div class="ley-item"><div class="dot" style="background:#EF4444"></div>Catálogos: ROLES, ESPECIALIDADES, ESTADOS</div>
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default',
+    er: { diagramPadding: 20, layoutDirection: 'TB', minEntityWidth: 100 }
+  });
+</script>
+</body>
+</html>

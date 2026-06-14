@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Diagrama ER Completo — ClinicaDB</title>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4ff; color: #1e293b; }
+@media print { body { background: white; } .no-print { display: none !important; } }
+
+/* ── PORTADA ── */
+.portada {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #6B21A8 100%);
+  color: white; text-align: center; padding: 48px 32px;
+  position: relative; overflow: hidden;
+}
+.portada::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:rgba(255,255,255,0.03); top:-150px; right:-100px; }
+.portada::after  { content:''; position:absolute; width:350px; height:350px; border-radius:50%; background:rgba(255,255,255,0.04); bottom:-100px; left:-80px; }
+.portada h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; position:relative; z-index:1; }
+.portada .sub { font-size: 16px; opacity: 0.75; margin: 10px 0 0; position:relative; z-index:1; }
+.portada .meta { display:flex; justify-content:center; gap:32px; margin-top:24px; position:relative; z-index:1; }
+.portada .meta-item { text-align:center; }
+.portada .meta-num { font-size:28px; font-weight:800; }
+.portada .meta-lab { font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:1px; }
+
+/* ── SECCIONES ── */
+.seccion { padding: 40px 48px; }
+.seccion-title { font-size: 22px; font-weight: 800; color: #1e1b4b; margin-bottom: 6px; }
+.seccion-sub   { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+.divider { height: 4px; background: linear-gradient(90deg, #6B21A8, #312e81, transparent); border-radius: 4px; margin-bottom: 12px; }
+
+/* ── LEYENDA ── */
+.leyenda { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
+.ley { display:flex; align-items:center; gap:7px; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; border:1.5px solid; }
+
+/* ── CONTENEDOR DEL DIAGRAMA ── */
+.diagrama-wrap { background:white; border-radius:16px; padding:24px; box-shadow:0 2px 20px rgba(107,33,168,0.1); overflow-x:auto; }
+
+/* ── TABLAS DEL DIAGRAMA ── */
+.grupos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 24px;
+  min-width: 900px;
+}
+
+.grupo {
+  background: #faf8ff;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1.5px solid #ede9fe;
+}
+.grupo-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+  color: #6B21A8; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1.5px dashed #ede9fe;
+}
+
+.db-table {
+  background: white; border-radius: 8px; margin-bottom: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08); overflow: hidden;
+}
+.db-table:last-child { margin-bottom: 0; }
+.db-table-header {
+  padding: 7px 12px; font-size: 13px; font-weight: 700; color: white;
+  display: flex; align-items: center; gap: 6px;
+}
+.db-table-body { padding: 2px 0; }
+.db-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 12px; font-size: 11px; color: #475569;
+  border-bottom: 1px solid #f8fafc;
+}
+.db-row:last-child { border-bottom: none; }
+.db-row .icon { font-size: 10px; width: 12px; flex-shrink: 0; }
+.db-row .col-name { font-weight: 600; min-width: 110px; }
+.db-row .col-type { color: #94a3b8; font-size: 10px; }
+.db-row.pk .col-name { color: #6B21A8; }
+.db-row.fk .col-name { color: #0284C7; }
+
+/* Colores por grupo */
+.c-purple { background: linear-gradient(90deg, #6B21A8, #7C3AED); }
+.c-blue   { background: linear-gradient(90deg, #1D4ED8, #0284C7); }
+.c-teal   { background: linear-gradient(90deg, #0891B2, #059669); }
+.c-green  { background: linear-gradient(90deg, #059669, #16A34A); }
+.c-orange { background: linear-gradient(90deg, #D97706, #EA580C); }
+.c-red    { background: linear-gradient(90deg, #DC2626, #DB2777); }
+.c-gray   { background: linear-gradient(90deg, #475569, #64748b); }
+
+/* ── FLECHA DE RELACIÓN ── */
+.rel-arrow {
+  text-align: center; font-size: 20px; color: #6B21A8; margin: 4px 0;
+  line-height: 1;
+}
+
+/* ── DIAGRAMA DE FLUJO CENTRAL ── */
+.flujo-centro {
+  grid-column: 1 / -1;
+  background: white; border-radius: 12px; padding: 20px;
+  border: 2px solid #6B21A8; position: relative;
+}
+.flujo-label {
+  position: absolute; top: -12px; left: 20px;
+  background: #6B21A8; color: white; padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+}
+.flujo-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.flujo-entity {
+  text-align: center; padding: 12px 16px; border-radius: 10px;
+  border: 2px solid; min-width: 110px;
+}
+.flujo-entity .ent-name { font-size: 13px; font-weight: 700; }
+.flujo-entity .ent-sub  { font-size: 10px; margin-top: 3px; opacity: 0.7; }
+.flujo-arrow { font-size: 22px; color: #94A3B8; }
+
+/* ── TARJETAS DE TABLAS ── */
+.tablas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.tabla-card {
+  background: white; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.07); border: 1px solid #f1f5f9;
+}
+.tabla-card-header {
+  padding: 12px 16px; color: white; display: flex; align-items: center; gap: 10px;
+}
+.tabla-card-header .t-icon { font-size: 20px; }
+.tabla-card-header .t-name { font-size: 14px; font-weight: 700; }
+.tabla-card-header .t-badge { margin-left: auto; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.tabla-card-body { padding: 14px 16px; }
+.tabla-card-body .motivo-label { font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.tabla-card-body .motivo-text  { font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 10px; }
+.tabla-card-body .cols-label   { font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin: 8px 0 4px; }
+.cols-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.col-tag {
+  padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
+  background: #f1f5f9; color: #475569;
+}
+.col-tag.pk { background: #ede9fe; color: #6B21A8; }
+.col-tag.fk { background: #dbeafe; color: #1D4ED8; }
+
+/* ── TABLA DE RELACIONES ── */
+.rel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rel-table th { background: #1e1b4b; color: white; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; }
+.rel-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+.rel-table tr:hover td { background: #faf5ff; }
+.rel-table tr:last-child td { border-bottom: none; }
+.rel-badge-1n { display:inline-block; padding:2px 8px; border-radius:20px; background:#EDE9FE; color:#6B21A8; font-size:11px; font-weight:700; }
+.rel-badge-11 { display:inline-block; padding:2px 8px; border-radius:20px; background:#DBEAFE; color:#1D4ED8; font-size:11px; font-weight:700; }
+.rel-badge-nn { display:inline-block; padding:2px 8px; border-radius:20px; background:#D1FAE5; color:#059669; font-size:11px; font-weight:700; }
+.tabla-a { font-weight:700; color:#6B21A8; }
+.tabla-b { font-weight:700; color:#1D4ED8; }
+
+/* ── FOOTER ── */
+.footer { background: #1e1b4b; color: white; text-align: center; padding: 20px; font-size: 12px; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PORTADA
+══════════════════════════════════════════ -->
+<div class="portada">
+  <h1>🏥 Diagrama Entidad-Relación — ClinicaDB</h1>
+  <p class="sub">Sistema de Gestión de Citas Médicas · Análisis Completo de Tablas y Relaciones</p>
+  <p class="sub" style="font-size:13px;margin-top:6px;">IDAT · 5to Ciclo · Desarrollo de Servicios Web · 2024</p>
+  <div class="meta">
+    <div class="meta-item"><div class="meta-num">23</div><div class="meta-lab">Tablas</div></div>
+    <div class="meta-item"><div class="meta-num">7</div><div class="meta-lab">Vistas</div></div>
+    <div class="meta-item"><div class="meta-num">20+</div><div class="meta-lab">Relaciones FK</div></div>
+    <div class="meta-item"><div class="meta-num">7</div><div class="meta-lab">Grupos</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 1: DIAGRAMA VISUAL DE TABLAS
+══════════════════════════════════════════ -->
+<div class="seccion" style="background:white;">
+  <div class="divider"></div>
+  <h2 class="seccion-title">1. Estructura de la Base de Datos — Tablas y Relaciones</h2>
+  <p class="seccion-sub">Organización de las 23 tablas agrupadas por dominio funcional con sus columnas principales y relaciones clave</p>
+
+  <div class="leyenda">
+    <div class="ley" style="background:#EDE9FE;color:#6B21A8;border-color:#C4B5FD;">🟣 Usuarios y Perfiles</div>
+    <div class="ley" style="background:#DBEAFE;color:#1D4ED8;border-color:#93C5FD;">🔵 Personal Médico</div>
+    <div class="ley" style="background:#D1FAE5;color:#059669;border-color:#6EE7B7;">🟢 Pacientes y Seguros</div>
+    <div class="ley" style="background:#FEF3C7;color:#D97706;border-color:#FCD34D;">🟡 Citas y Estados</div>
+    <div class="ley" style="background:#FEE2E2;color:#DC2626;border-color:#FCA5A5;">🔴 Atención Médica</div>
+    <div class="ley" style="background:#ECFDF5;color:#065F46;border-color:#A7F3D0;">🟩 Facturación</div>
+    <div class="ley" style="background:#F1F5F9;color:#475569;border-color:#CBD5E1;">⬜ Auditoría</div>
+    <div class="ley" style="background:#faf0ff;color:#7C3AED;border-color:#a78bfa;">
+      🔑 PK = Clave Primaria &nbsp;|&nbsp; 🔗 FK = Clave Foránea</div>
+  </div>
+
+  <div class="diagrama-wrap">
+    <div class="grupos-grid">
+
+      <!-- GRUPO A: USUARIOS Y PERFILES -->
+      <div class="grupo" style="border-color:#C4B5FD;">
+        <div class="grupo-title">🟣 Grupo A — Usuarios y Perfiles</div>
+
+        <div class="db-table">
+          <div class="db-table-header c-purple">🔑 ROLES</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdRol</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NombreRol</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Descripcion</span><span class="col-type">VARCHAR(200)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Rol → N Usuarios</div>
+        <div class="db-table">
+          <div class="db-table-header c-purple">👤 USUARIOS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdUsuario</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdRol</span><span class="col-type">FK → ROLES</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombres</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Apellidos</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">DNI</span><span class="col-type">CHAR(8) UNIQUE</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaNacimiento</span><span class="col-type">DATE</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Username</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">PasswordHash</span><span class="col-type">VARCHAR(255)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Usuario → N Contactos</div>
+        <div class="db-table">
+          <div class="db-table-header c-purple">📞 CONTACTOS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdContacto</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdUsuario</span><span class="col-type">FK → USUARIOS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">TipoContacto</span><span class="col-type">VARCHAR(20)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Valor</span><span class="col-type">VARCHAR(150)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">EsPrincipal</span><span class="col-type">BIT</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRUPO B: PERSONAL MÉDICO -->
+      <div class="grupo" style="border-color:#93C5FD;">
+        <div class="grupo-title">🔵 Grupo B — Personal Médico</div>
+
+        <div class="db-table">
+          <div class="db-table-header c-blue">🩺 ESPECIALIDADES</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdEspecialidad</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Descripcion</span><span class="col-type">VARCHAR(300)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Especialidad → N Médicos</div>
+        <div class="db-table">
+          <div class="db-table-header c-blue">👨‍⚕️ MEDICOS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdMedico</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdUsuario</span><span class="col-type">FK → USUARIOS</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdEspecialidad</span><span class="col-type">FK → ESPECIALIDADES</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">ColegioMedico</span><span class="col-type">VARCHAR(20) UNIQUE</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Consultorio</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">TarifaConsulta</span><span class="col-type">DECIMAL(10,2)</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Médico → N Horarios</div>
+        <div class="db-table">
+          <div class="db-table-header c-blue">🕐 HORARIOSMEDICO</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdHorario</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdMedico</span><span class="col-type">FK → MEDICOS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">DiaSemana</span><span class="col-type">TINYINT (1-7)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">HoraInicio</span><span class="col-type">TIME</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">HoraFin</span><span class="col-type">TIME</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+          </div>
+        </div>
+        <br>
+        <div class="db-table">
+          <div class="db-table-header c-blue">🏢 CONSULTORIOS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdConsultorio</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Piso</span><span class="col-type">VARCHAR(10)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Capacidad</span><span class="col-type">INT</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRUPO C: PACIENTES -->
+      <div class="grupo" style="border-color:#6EE7B7;">
+        <div class="grupo-title">🟢 Grupo C — Pacientes y Seguros</div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <div class="db-table" style="flex:1;">
+            <div class="db-table-header c-teal">🏷️ TIPOASEGURADO</div>
+            <div class="db-table-body">
+              <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdTipo</span><span class="col-type">INT PK</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(50)</span></div>
+            </div>
+          </div>
+          <div class="db-table" style="flex:1;">
+            <div class="db-table-header c-teal">🏭 EMPRESAS</div>
+            <div class="db-table-body">
+              <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdEmpresa</span><span class="col-type">INT PK</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">RazonSocial</span><span class="col-type">VARCHAR(200)</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">RUC</span><span class="col-type">CHAR(11)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ Usuario + TipoAseg + Empresa → Paciente</div>
+        <div class="db-table">
+          <div class="db-table-header c-green">🧑 PACIENTES</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdPaciente</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdUsuario</span><span class="col-type">FK → USUARIOS</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdTipoAsegurado</span><span class="col-type">FK → TIPOASEGURADO</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdEmpresa</span><span class="col-type">FK → EMPRESAS (NULL)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NumeroSeguro</span><span class="col-type">VARCHAR(30)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">GrupoSanguineo</span><span class="col-type">VARCHAR(5)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Alergias</span><span class="col-type">VARCHAR(500)</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Paciente → N Seguros</div>
+        <div class="db-table">
+          <div class="db-table-header c-green">🛡️ SEGUROS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdSeguro</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdPaciente</span><span class="col-type">FK → PACIENTES</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NombreSeguro</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NumeroPoliza</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaVigencia</span><span class="col-type">DATE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRUPO CENTRAL: CITAS (span full width) -->
+      <div class="flujo-centro" style="grid-column:1/-1;">
+        <div class="flujo-label">🟡 Grupo D — Núcleo: CITAS (tabla central del negocio)</div>
+        <div style="display:grid;grid-template-columns:1fr auto 2fr auto 1fr;gap:16px;align-items:center;margin-bottom:16px;">
+          <div class="db-table">
+            <div class="db-table-header c-orange">📋 ESTADOSCITA</div>
+            <div class="db-table-body">
+              <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdEstado</span><span class="col-type">INT PK</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(20)</span></div>
+            </div>
+          </div>
+          <div style="text-align:center;color:#94A3B8;font-size:24px;">→</div>
+          <div class="db-table" style="border:2px solid #D97706;">
+            <div class="db-table-header c-orange" style="font-size:15px;padding:10px 14px;">⭐ CITAS — TABLA CENTRAL</div>
+            <div class="db-table-body">
+              <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdCita</span><span class="col-type">INT PK</span></div>
+              <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">PacienteId</span><span class="col-type">FK → PACIENTES</span></div>
+              <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">MedicoId</span><span class="col-type">FK → MEDICOS</span></div>
+              <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdEstado</span><span class="col-type">FK → ESTADOSCITA</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">FechaHora</span><span class="col-type">DATETIME</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">Motivo</span><span class="col-type">VARCHAR(300)</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">Observaciones</span><span class="col-type">VARCHAR(500)</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">FechaCreacion</span><span class="col-type">DATETIME</span></div>
+            </div>
+          </div>
+          <div style="text-align:center;color:#94A3B8;font-size:24px;">←</div>
+          <div class="db-table">
+            <div class="db-table-header c-orange">❌ CANCELACIONESCITA</div>
+            <div class="db-table-body">
+              <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdCancelacion</span><span class="col-type">INT PK</span></div>
+              <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdCita</span><span class="col-type">FK → CITAS</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">MotivoCancelacion</span><span class="col-type">VARCHAR(300)</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">CanceladoPor</span><span class="col-type">VARCHAR(50)</span></div>
+              <div class="db-row"><span class="icon"></span><span class="col-name">FechaCancelacion</span><span class="col-type">DATETIME</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;color:#D97706;font-size:13px;font-weight:600;margin-top:4px;">
+          ↑ PACIENTES y MEDICOS se conectan aquí — CITAS es el punto de encuentro del sistema ↑
+        </div>
+      </div>
+
+      <!-- GRUPO E: ATENCIÓN MÉDICA -->
+      <div class="grupo" style="border-color:#FCA5A5;">
+        <div class="grupo-title">🔴 Grupo E — Atención Médica</div>
+        <div class="db-table">
+          <div class="db-table-header c-red">📊 TRIAJE</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdTriaje</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdCita</span><span class="col-type">FK → CITAS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Peso</span><span class="col-type">DECIMAL(5,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Talla</span><span class="col-type">DECIMAL(4,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">PresionSistolica</span><span class="col-type">INT</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Temperatura</span><span class="col-type">DECIMAL(4,1)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FrecuenciaCardiaca</span><span class="col-type">INT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ + 1 Cita → N Historiales</div>
+        <div class="db-table">
+          <div class="db-table-header c-red">📁 HISTORIALCLINICO</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdHistorial</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdPaciente</span><span class="col-type">FK → PACIENTES</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdCita</span><span class="col-type">FK → CITAS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Diagnostico</span><span class="col-type">VARCHAR(500)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Tratamiento</span><span class="col-type">VARCHAR(500)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaRegistro</span><span class="col-type">DATETIME</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ + 1 Cita → 1 Receta</div>
+        <div class="db-table">
+          <div class="db-table-header c-red">💊 RECETAS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdReceta</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdCita</span><span class="col-type">FK → CITAS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Diagnostico</span><span class="col-type">VARCHAR(500)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Indicaciones</span><span class="col-type">VARCHAR(1000)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaEmision</span><span class="col-type">DATETIME</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRUPO F: MEDICAMENTOS + DETALLE -->
+      <div class="grupo" style="border-color:#A7F3D0;">
+        <div class="grupo-title">🟩 Grupo F — Medicamentos y Facturación</div>
+        <div class="db-table">
+          <div class="db-table-header" style="background:linear-gradient(90deg,#16A34A,#059669)">💊 MEDICAMENTOS (catálogo)</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdMedicamento</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Presentacion</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Concentracion</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Precio</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Stock</span><span class="col-type">INT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ Receta + Medicamento → DetalleReceta (N:N)</div>
+        <div class="db-table">
+          <div class="db-table-header" style="background:linear-gradient(90deg,#0F766E,#059669)">📋 DETALLERECETA (pivote)</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdDetalle</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdReceta</span><span class="col-type">FK → RECETAS</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdMedicamento</span><span class="col-type">FK → MEDICAMENTOS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Dosis</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Frecuencia</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Cantidad</span><span class="col-type">INT</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ 1 Cita → 1 Factura</div>
+        <div class="db-table">
+          <div class="db-table-header" style="background:linear-gradient(90deg,#065F46,#059669)">🧾 FACTURAS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdFactura</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdCita</span><span class="col-type">FK → CITAS</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NumeroFactura</span><span class="col-type">VARCHAR(20) UNIQUE</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Subtotal</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">IGV</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Total</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">EstadoPago</span><span class="col-type">VARCHAR(20)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRUPO G: PAGOS + AUDITORÍA -->
+      <div class="grupo" style="border-color:#CBD5E1;">
+        <div class="grupo-title">⬜ Grupo G — Pagos y Auditoría</div>
+        <div class="db-table">
+          <div class="db-table-header c-gray">💳 METODOSPAGO (catálogo)</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdMetodo</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(50)</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow">⬇ Factura + Método → Pago</div>
+        <div class="db-table">
+          <div class="db-table-header c-gray">💰 PAGOS</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdPago</span><span class="col-type">INT PK</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdFactura</span><span class="col-type">FK → FACTURAS</span></div>
+            <div class="db-row fk"><span class="icon">🔗</span><span class="col-name">IdMetodo</span><span class="col-type">FK → METODOSPAGO</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Monto</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">NroOperacion</span><span class="col-type">VARCHAR(100)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaPago</span><span class="col-type">DATETIME</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow" style="margin-top:12px;">── Registro global del sistema ──</div>
+        <div class="db-table">
+          <div class="db-table-header c-gray">🔍 AUDITORIALOG</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdLog</span><span class="col-type">BIGINT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Tabla</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Operacion</span><span class="col-type">VARCHAR(10)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">IdRegistro</span><span class="col-type">INT</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">DatosAntes</span><span class="col-type">NVARCHAR(MAX)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">FechaHora</span><span class="col-type">DATETIME</span></div>
+          </div>
+        </div>
+        <div class="rel-arrow" style="margin-top:12px;">── Catálogo adicional ──</div>
+        <div class="db-table">
+          <div class="db-table-header c-gray">📂 TIPOCONSULTA</div>
+          <div class="db-table-body">
+            <div class="db-row pk"><span class="icon">🔑</span><span class="col-name">IdTipoConsulta</span><span class="col-type">INT PK</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Nombre</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="icon"></span><span class="col-name">Descripcion</span><span class="col-type">VARCHAR(200)</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end grupos-grid -->
+  </div><!-- end diagrama-wrap -->
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 2: MOTIVO DE CADA TABLA
+══════════════════════════════════════════ -->
+<div class="seccion">
+  <div class="divider"></div>
+  <h2 class="seccion-title">2. Motivo y Justificación de cada Tabla</h2>
+  <p class="seccion-sub">Explicación del propósito funcional y de negocio de cada una de las 23 tablas de la base de datos</p>
+
+  <div class="tablas-grid">
+
+    <!-- ROLES -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#6B21A8,#7C3AED)">
+        <span class="t-icon">🔑</span>
+        <div><div class="t-name">ROLES</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Permite diferenciar el tipo de acceso de cada usuario en el sistema. Un usuario con rol <strong>Administrador</strong> puede gestionar todo; un <strong>Médico</strong> solo ve sus citas; un <strong>Paciente</strong> solo ve sus propios datos. Esto implementa el principio de <em>control de acceso basado en roles (RBAC)</em>.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdRol PK</span>
+          <span class="col-tag">NombreRol</span>
+          <span class="col-tag">Descripcion</span>
+          <span class="col-tag">Activo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#6B21A8,#4C1D95)">
+        <span class="t-icon">👤</span>
+        <div><div class="t-name">USUARIOS</div></div>
+        <span class="t-badge">Central</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Es la <strong>tabla madre del sistema</strong>. Almacena la identidad de toda persona que interactúa con la clínica (médicos, pacientes, administrativos). Centraliza nombre, DNI, credenciales de acceso y rol. Así se evita duplicar datos personales en MEDICOS y PACIENTES.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdUsuario PK</span>
+          <span class="col-tag fk">IdRol FK</span>
+          <span class="col-tag">DNI UNIQUE</span>
+          <span class="col-tag">Username</span>
+          <span class="col-tag">PasswordHash</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#7C3AED,#6B21A8)">
+        <span class="t-icon">📞</span>
+        <div><div class="t-name">CONTACTOS</div></div>
+        <span class="t-badge">1:N con Usuarios</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Un usuario puede tener <strong>múltiples formas de contacto</strong> (teléfono fijo, celular, email, WhatsApp). Si se pusieran en USUARIOS, solo habría un campo por tipo. Al separarlo en tabla propia se permite registrar tantos contactos como sea necesario y marcar cuál es el principal.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdContacto PK</span>
+          <span class="col-tag fk">IdUsuario FK</span>
+          <span class="col-tag">TipoContacto</span>
+          <span class="col-tag">EsPrincipal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESPECIALIDADES -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#1D4ED8,#0284C7)">
+        <span class="t-icon">🩺</span>
+        <div><div class="t-name">ESPECIALIDADES</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Almacena el catálogo de especialidades médicas disponibles en la clínica (Cardiología, Pediatría, etc.). Al tenerlas en tabla separada, se puede <strong>agregar nuevas especialidades</strong> sin modificar el código, y se garantiza consistencia en los nombres (evita errores tipográficos).</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdEspecialidad PK</span>
+          <span class="col-tag">Nombre</span>
+          <span class="col-tag">Descripcion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#0284C7,#0891B2)">
+        <span class="t-icon">👨‍⚕️</span>
+        <div><div class="t-name">MEDICOS</div></div>
+        <span class="t-badge">Perfil extendido</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Extiende USUARIOS con datos <strong>exclusivos del perfil médico</strong>: número de colegiatura, especialidad, tarifa de consulta y consultorio. Al separarlo de USUARIOS, un médico tiene su perfil propio sin mezclar campos que no aplican a pacientes o administrativos (<em>diseño normalizado</em>).</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdMedico PK</span>
+          <span class="col-tag fk">IdUsuario FK</span>
+          <span class="col-tag fk">IdEspecialidad FK</span>
+          <span class="col-tag">ColegioMedico UNIQUE</span>
+          <span class="col-tag">TarifaConsulta</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HORARIOSMEDICO -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#0891B2,#0284C7)">
+        <span class="t-icon">🕐</span>
+        <div><div class="t-name">HORARIOSMEDICO</div></div>
+        <span class="t-badge">Disponibilidad</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Permite registrar los <strong>horarios de atención semanales</strong> de cada médico (ej: Lunes y Miércoles de 08:00 a 13:00). Con esta tabla se puede validar si un médico está disponible antes de agendar una cita, evitando conflictos de horario entre diferentes pacientes.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdHorario PK</span>
+          <span class="col-tag fk">IdMedico FK</span>
+          <span class="col-tag">DiaSemana</span>
+          <span class="col-tag">HoraInicio</span>
+          <span class="col-tag">HoraFin</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPOASEGURADO -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#059669,#0891B2)">
+        <span class="t-icon">🏷️</span>
+        <div><div class="t-name">TIPOASEGURADO</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Clasifica el <strong>tipo de cobertura médica</strong> del paciente (SIS, EPS, SOAT, Particular). Esto determina cómo se facturará la consulta: si es particular paga el precio completo, si tiene EPS se aplica un descuento o copago. Impacta directamente en el módulo de facturación.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdTipo PK</span>
+          <span class="col-tag">Nombre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPRESAS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#0891B2,#059669)">
+        <span class="t-icon">🏭</span>
+        <div><div class="t-name">EMPRESAS</div></div>
+        <span class="t-badge">Aseguradoras</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Registra las <strong>empresas aseguradoras o empleadoras</strong> que cubren la atención médica de los pacientes. Permite saber a qué EPS o empresa pertenece el paciente para coordinar la cobertura. Un paciente puede estar asegurado por una empresa específica como Rimac, Pacifico, etc.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdEmpresa PK</span>
+          <span class="col-tag">RazonSocial</span>
+          <span class="col-tag">RUC UNIQUE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACIENTES -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#059669,#16A34A)">
+        <span class="t-icon">🧑</span>
+        <div><div class="t-name">PACIENTES</div></div>
+        <span class="t-badge">Perfil extendido</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Extiende USUARIOS con datos <strong>clínicos exclusivos del paciente</strong>: grupo sanguíneo, alergias, tipo de seguro y empresa aseguradora. Esta separación respeta la normalización: datos de identidad en USUARIOS y datos médicos en PACIENTES. Es el "expediente" del paciente.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdPaciente PK</span>
+          <span class="col-tag fk">IdUsuario FK</span>
+          <span class="col-tag fk">IdTipoAsegurado FK</span>
+          <span class="col-tag fk">IdEmpresa FK</span>
+          <span class="col-tag">GrupoSanguineo</span>
+          <span class="col-tag">Alergias</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEGUROS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#16A34A,#059669)">
+        <span class="t-icon">🛡️</span>
+        <div><div class="t-name">SEGUROS</div></div>
+        <span class="t-badge">Pólizas</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Un paciente puede tener <strong>múltiples pólizas de seguro</strong> vigentes (ej: SIS + seguro particular). Esta tabla registra cada póliza con su número, fecha de vencimiento y nombre de la aseguradora. Permite verificar si el seguro del paciente está vigente al momento de la cita.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdSeguro PK</span>
+          <span class="col-tag fk">IdPaciente FK</span>
+          <span class="col-tag">NumeroPoliza</span>
+          <span class="col-tag">FechaVigencia</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADOSCITA -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#D97706,#EA580C)">
+        <span class="t-icon">📋</span>
+        <div><div class="t-name">ESTADOSCITA</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Define los <strong>estados del ciclo de vida de una cita</strong>: Pendiente → Confirmada → Completada o Cancelada. Al usar una tabla catálogo en vez de texto libre, se garantiza consistencia en los estados y facilita filtrar citas por estado en reportes. Evita que alguien escriba "Cancelado" vs "cancelada".</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdEstado PK</span>
+          <span class="col-tag">Nombre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CITAS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#D97706,#D97706);border:2px solid #FCD34D;">
+        <span class="t-icon">⭐</span>
+        <div><div class="t-name">CITAS — TABLA CENTRAL</div></div>
+        <span class="t-badge" style="background:#FCD34D;color:#92400E;">Core</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Es el <strong>corazón del sistema</strong>. Registra el encuentro médico entre un paciente y un médico en fecha/hora específica. Vincula ambas entidades principales y sirve de punto de partida para generar recetas, facturas, triaje e historial. Sin esta tabla no hay ninguna operación médica posible.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdCita PK</span>
+          <span class="col-tag fk">PacienteId FK</span>
+          <span class="col-tag fk">MedicoId FK</span>
+          <span class="col-tag fk">IdEstado FK</span>
+          <span class="col-tag">FechaHora</span>
+          <span class="col-tag">Motivo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANCELACIONESCITA -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#EA580C,#DC2626)">
+        <span class="t-icon">❌</span>
+        <div><div class="t-name">CANCELACIONESCITA</div></div>
+        <span class="t-badge">Trazabilidad</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Registra el <strong>motivo y responsable de cada cancelación</strong>. Si simplemente se cambia el estado de CITAS a "Cancelada", se pierde la razón de la cancelación. Esta tabla permite auditar patrones: ¿cuántas veces cancela un mismo paciente? ¿cuántos médicos cancelan? Útil para indicadores de calidad.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdCancelacion PK</span>
+          <span class="col-tag fk">IdCita FK</span>
+          <span class="col-tag">MotivoCancelacion</span>
+          <span class="col-tag">CanceladoPor</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIAJE -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#DC2626,#DB2777)">
+        <span class="t-icon">📊</span>
+        <div><div class="t-name">TRIAJE</div></div>
+        <span class="t-badge">Signos vitales</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Antes de ver al médico, enfermería toma los <strong>signos vitales del paciente</strong> (peso, talla, presión, temperatura, frecuencia cardiaca). Al guardarlos asociados a la cita, el médico tiene esta información disponible durante la consulta y queda en el historial para seguimiento de tendencias a lo largo del tiempo.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdTriaje PK</span>
+          <span class="col-tag fk">IdCita FK</span>
+          <span class="col-tag">Peso</span>
+          <span class="col-tag">Talla</span>
+          <span class="col-tag">PresionSistolica</span>
+          <span class="col-tag">Temperatura</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIALCLINICO -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#DB2777,#DC2626)">
+        <span class="t-icon">📁</span>
+        <div><div class="t-name">HISTORIALCLINICO</div></div>
+        <span class="t-badge">Expediente médico</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Acumula el <strong>historial de diagnósticos y tratamientos</strong> del paciente a lo largo del tiempo. Cada consulta puede generar un registro en el historial. Permite al médico ver si el paciente ya fue tratado por la misma condición anteriormente, evitando prescribir medicamentos contradictorios.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdHistorial PK</span>
+          <span class="col-tag fk">IdPaciente FK</span>
+          <span class="col-tag fk">IdCita FK</span>
+          <span class="col-tag">Diagnostico</span>
+          <span class="col-tag">Tratamiento</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECETAS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#7C3AED,#DC2626)">
+        <span class="t-icon">💊</span>
+        <div><div class="t-name">RECETAS</div></div>
+        <span class="t-badge">Por cita</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Al finalizar una consulta, el médico emite una <strong>receta médica</strong> con diagnóstico e indicaciones generales. Se separa de CITAS porque la receta tiene datos propios (diagnóstico final, fecha de emisión, indicaciones de cuidado) y puede no existir para todas las citas (ej: consulta de control).</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdReceta PK</span>
+          <span class="col-tag fk">IdCita FK</span>
+          <span class="col-tag">Diagnostico</span>
+          <span class="col-tag">Indicaciones</span>
+          <span class="col-tag">FechaEmision</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICAMENTOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#16A34A,#059669)">
+        <span class="t-icon">💊</span>
+        <div><div class="t-name">MEDICAMENTOS</div></div>
+        <span class="t-badge">Farmacia</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Es el <strong>catálogo de medicamentos disponibles</strong> en la farmacia de la clínica. Al tenerlos en tabla propia, se puede controlar el stock, evitar prescribir medicamentos agotados y calcular automáticamente el costo de los medicamentos al generar la factura. También facilita reportes de consumo.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdMedicamento PK</span>
+          <span class="col-tag">Nombre</span>
+          <span class="col-tag">Presentacion</span>
+          <span class="col-tag">Precio</span>
+          <span class="col-tag">Stock</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETALLERECETA -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#0F766E,#059669)">
+        <span class="t-icon">📋</span>
+        <div><div class="t-name">DETALLERECETA</div></div>
+        <span class="t-badge">Tabla pivote N:N</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Resuelve la <strong>relación N:N entre RECETAS y MEDICAMENTOS</strong>: una receta puede incluir varios medicamentos, y un mismo medicamento puede aparecer en muchas recetas. Además de ser la tabla de unión, agrega atributos propios de la prescripción: dosis, frecuencia y cantidad específica para esa receta.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdDetalle PK</span>
+          <span class="col-tag fk">IdReceta FK</span>
+          <span class="col-tag fk">IdMedicamento FK</span>
+          <span class="col-tag">Dosis</span>
+          <span class="col-tag">Frecuencia</span>
+          <span class="col-tag">Cantidad</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FACTURAS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#065F46,#059669)">
+        <span class="t-icon">🧾</span>
+        <div><div class="t-name">FACTURAS</div></div>
+        <span class="t-badge">Facturación</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Genera el <strong>comprobante de pago</strong> por cada consulta realizada. Incluye subtotal, IGV (18%) y total. Al vincularse con CITAS, se puede rastrear qué consulta generó qué factura. Separar la factura de la cita respeta el principio contable de que una cita es un evento médico y la factura es un evento financiero.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdFactura PK</span>
+          <span class="col-tag fk">IdCita FK</span>
+          <span class="col-tag">NumeroFactura UNIQUE</span>
+          <span class="col-tag">Subtotal</span>
+          <span class="col-tag">IGV</span>
+          <span class="col-tag">Total</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- METODOSPAGO -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#475569,#64748b)">
+        <span class="t-icon">💳</span>
+        <div><div class="t-name">METODOSPAGO</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Catálogo de <strong>formas de pago aceptadas</strong> (Efectivo, Tarjeta débito/crédito, Transferencia, Yape, Plin, etc.). Al separarlo, se puede agregar nuevos métodos de pago sin cambiar el esquema de PAGOS. También permite reportes de cuánto se recauda por cada método de pago.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdMetodo PK</span>
+          <span class="col-tag">Nombre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#374151,#475569)">
+        <span class="t-icon">💰</span>
+        <div><div class="t-name">PAGOS</div></div>
+        <span class="t-badge">Transacciones</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Una factura puede pagarse en <strong>múltiples cuotas o con diferentes métodos</strong> (parte en efectivo, parte con tarjeta). Al separarlo de FACTURAS, se registra cada transacción de pago individualmente con su número de operación, permitiendo conciliación contable y seguimiento de pagos parciales.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdPago PK</span>
+          <span class="col-tag fk">IdFactura FK</span>
+          <span class="col-tag fk">IdMetodo FK</span>
+          <span class="col-tag">Monto</span>
+          <span class="col-tag">NroOperacion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULTORIOS -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#0284C7,#1D4ED8)">
+        <span class="t-icon">🏢</span>
+        <div><div class="t-name">CONSULTORIOS</div></div>
+        <span class="t-badge">Infraestructura</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Registra los <strong>espacios físicos de atención</strong> de la clínica (consultorio 101, piso 1, etc.). Permite asignar citas a consultorios específicos, controlar la disponibilidad del espacio físico y optimizar el uso de instalaciones. También sirve para el planning de ampliaciones.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdConsultorio PK</span>
+          <span class="col-tag">Nombre</span>
+          <span class="col-tag">Piso</span>
+          <span class="col-tag">Capacidad</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPOCONSULTA -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#64748b,#475569)">
+        <span class="t-icon">📂</span>
+        <div><div class="t-name">TIPOCONSULTA</div></div>
+        <span class="t-badge">Catálogo</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Clasifica el <strong>tipo de atención médica</strong>: consulta general, emergencia, control, teleconsulta, etc. Cada tipo puede tener diferente tarifa, duración y requerimientos. Al ser catálogo, permite agregar nuevos tipos sin modificar la lógica de negocio. Facilita estadísticas por tipo de atención.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdTipoConsulta PK</span>
+          <span class="col-tag">Nombre</span>
+          <span class="col-tag">Descripcion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDITORIALOG -->
+    <div class="tabla-card">
+      <div class="tabla-card-header" style="background:linear-gradient(90deg,#1e293b,#334155)">
+        <span class="t-icon">🔍</span>
+        <div><div class="t-name">AUDITORIALOG</div></div>
+        <span class="t-badge">Seguridad</span>
+      </div>
+      <div class="tabla-card-body">
+        <div class="motivo-label">¿Por qué se creó?</div>
+        <div class="motivo-text">Registra <strong>quién hizo qué y cuándo</strong> en el sistema (INSERT, UPDATE, DELETE). Cumple con requisitos de seguridad y trazabilidad médica: en sistemas de salud es obligatorio saber quién modificó un dato clínico. Permite detectar accesos no autorizados, recuperar datos borrados accidentalmente y cumplir auditorías.</div>
+        <div class="cols-label">Columnas clave</div>
+        <div class="cols-list">
+          <span class="col-tag pk">IdLog PK</span>
+          <span class="col-tag">Tabla</span>
+          <span class="col-tag">Operacion</span>
+          <span class="col-tag">DatosAntes</span>
+          <span class="col-tag">FechaHora</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tablas-grid -->
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 3: RELACIONES Y JUSTIFICACIÓN
+══════════════════════════════════════════ -->
+<div class="seccion" style="background:white;">
+  <div class="divider"></div>
+  <h2 class="seccion-title">3. Relaciones entre Tablas — Tipo y Justificación</h2>
+  <p class="seccion-sub">Explicación de cada FK (clave foránea) y el motivo de negocio que justifica la relación</p>
+
+  <div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
+    <table class="rel-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tabla Origen</th>
+          <th>Tipo</th>
+          <th>Tabla Destino</th>
+          <th>Justificación de la Relación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><span class="tabla-a">USUARIOS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">ROLES</span></td>
+          <td>Cada usuario pertenece a un rol. El rol determina los permisos del usuario en el sistema (Admin, Médico, Paciente). Un mismo rol puede tener muchos usuarios.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><span class="tabla-a">CONTACTOS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">USUARIOS</span></td>
+          <td>Un usuario puede tener múltiples formas de contacto (teléfono, email, WhatsApp). Esta relación 1:N permite registrar todos sus datos de contacto sin límite.</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><span class="tabla-a">MEDICOS</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">USUARIOS</span></td>
+          <td>Cada médico es exactamente un usuario del sistema. La relación 1:1 extiende el perfil base de USUARIOS con datos exclusivamente médicos (CMP, especialidad, tarifa).</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><span class="tabla-a">MEDICOS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">ESPECIALIDADES</span></td>
+          <td>Varios médicos pueden tener la misma especialidad (ej: 3 cardiólogos). El catálogo de especialidades garantiza uniformidad en los nombres y facilita filtrar médicos por área médica.</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><span class="tabla-a">HORARIOSMEDICO</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">MEDICOS</span></td>
+          <td>Un médico tiene múltiples franjas horarias de atención (ej: Lunes 8-12 y Jueves 14-18). Esta relación permite gestionar la disponibilidad para validar citas.</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><span class="tabla-a">PACIENTES</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">USUARIOS</span></td>
+          <td>Cada paciente es un usuario. La relación 1:1 extiende USUARIOS con datos clínicos del paciente (grupo sanguíneo, alergias) sin mezclarlos con datos de médicos.</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><span class="tabla-a">PACIENTES</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">TIPOASEGURADO</span></td>
+          <td>Cada paciente tiene un tipo de seguro (SIS, EPS, Particular). Este catálogo determina cómo se calcula su cobertura y descuentos al momento de facturar la consulta.</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><span class="tabla-a">PACIENTES</span></td>
+          <td><span class="rel-badge-1n">N:1 (NULL)</span></td>
+          <td><span class="tabla-b">EMPRESAS</span></td>
+          <td>Un paciente puede estar asegurado por una empresa (EPS). Es opcional (NULL) porque no todos los pacientes tienen cobertura empresarial; algunos son particulares.</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><span class="tabla-a">SEGUROS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">PACIENTES</span></td>
+          <td>Un paciente puede tener múltiples pólizas de seguro vigentes simultáneamente. Esta relación permite registrar cada póliza con sus propios datos de vigencia y cobertura.</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><span class="tabla-a">CITAS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">PACIENTES</span></td>
+          <td>Un paciente puede tener muchas citas a lo largo del tiempo. Esta relación es fundamental: conecta al paciente con su atención médica. Sin ella no se puede registrar quién recibe la consulta.</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><span class="tabla-a">CITAS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">MEDICOS</span></td>
+          <td>Un médico atiende muchas citas. Esta relación define quién realiza la consulta. Permite filtrar "todas las citas del Dr. García" y controlar conflictos de horario del médico.</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><span class="tabla-a">CITAS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">ESTADOSCITA</span></td>
+          <td>Cada cita tiene exactamente un estado en cada momento (Pendiente, Confirmada, etc.). El catálogo garantiza que el estado sea siempre uno de los valores válidos del flujo de negocio.</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><span class="tabla-a">CANCELACIONESCITA</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">CITAS</span></td>
+          <td>Solo existe UNA cancelación por cita. Si se vuelve a agendar, es una nueva cita. Esta relación guarda el motivo y responsable de la cancelación para análisis de indicadores de calidad.</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><span class="tabla-a">TRIAJE</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">CITAS</span></td>
+          <td>Por cada cita se realiza exactamente un triaje (toma de signos vitales). Se separa de CITAS porque no siempre existe (teleconsultas) y tiene sus propios atributos médicos específicos.</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><span class="tabla-a">HISTORIALCLINICO</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">PACIENTES</span></td>
+          <td>Un paciente acumula múltiples registros en su historial a través del tiempo. Esta relación permite consultar toda la evolución médica del paciente, independientemente de qué médico lo atendió.</td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td><span class="tabla-a">HISTORIALCLINICO</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">CITAS</span></td>
+          <td>Cada registro del historial proviene de una consulta específica. Esta relación permite saber exactamente en qué cita se realizó el diagnóstico y qué médico lo hizo.</td>
+        </tr>
+        <tr>
+          <td>17</td>
+          <td><span class="tabla-a">RECETAS</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">CITAS</span></td>
+          <td>Por cada cita se puede emitir máximo una receta. La receta es la prescripción médica resultado de la consulta. Se separa de CITAS para mantener el modelo limpio y porque no toda cita genera receta.</td>
+        </tr>
+        <tr>
+          <td>18</td>
+          <td><span class="tabla-a">DETALLERECETA</span></td>
+          <td><span class="rel-badge-nn">N:N → N:1</span></td>
+          <td><span class="tabla-b">RECETAS / MEDICAMENTOS</span></td>
+          <td>Resuelve la relación muchos a muchos: una receta incluye varios medicamentos y un medicamento puede estar en muchas recetas. Además guarda atributos de la prescripción (dosis, frecuencia, cantidad).</td>
+        </tr>
+        <tr>
+          <td>19</td>
+          <td><span class="tabla-a">FACTURAS</span></td>
+          <td><span class="rel-badge-11">1:1</span></td>
+          <td><span class="tabla-b">CITAS</span></td>
+          <td>Cada consulta genera exactamente una factura. Esta relación vincula el evento médico (cita) con el evento financiero (factura), permitiendo saber el costo exacto de cada atención.</td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td><span class="tabla-a">PAGOS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">FACTURAS</span></td>
+          <td>Una factura puede pagarse en varias partes o con diferentes métodos. Esta relación permite el registro de pagos parciales y la conciliación de cuánto de la factura ha sido cancelado.</td>
+        </tr>
+        <tr>
+          <td>21</td>
+          <td><span class="tabla-a">PAGOS</span></td>
+          <td><span class="rel-badge-1n">N:1</span></td>
+          <td><span class="tabla-b">METODOSPAGO</span></td>
+          <td>Cada pago usa un método (efectivo, tarjeta, transferencia). El catálogo permite agregar nuevas formas de pago sin modificar PAGOS, y facilita reportes de recaudación por método.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<div class="footer">
+  <strong>ClinicaDB — Diagrama Entidad-Relación Completo</strong><br>
+  IDAT · 5to Ciclo · Desarrollo de Servicios Web · 2024<br>
+  Integrantes: Jesus Reymundo Román · Aldair Santos Cahuana · Reyes Zarate Leomarc · Ivan Zarate Soncco · Crhistian Meza Cardenas · Alexandee Morillo Campos
+</div>
+
+</body>
+</html>

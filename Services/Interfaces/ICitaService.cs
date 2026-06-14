@@ -13,5 +13,6 @@ public interface ICitaService
     CitaResponseDto Crear(CitaCreateDto dto);
     CitaResponseDto Actualizar(int id, CitaUpdateDto dto);
     CitaResponseDto Cancelar(int id);
+    CitaResponseDto Anular(int id);
     void Eliminar(int id);
 }

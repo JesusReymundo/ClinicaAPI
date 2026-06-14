@@ -7,6 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendReact", policy =>
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -64,6 +72,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseExceptionHandler();
+app.UseCors("FrontendReact");
 app.UseHttpsRedirection();
 app.MapControllers();
 

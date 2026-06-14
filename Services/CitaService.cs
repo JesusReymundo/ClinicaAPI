@@ -84,6 +84,7 @@ public class CitaService : ICitaService
         var conflicto = _db.Citas.Any(c =>
             c.MedicoId == dto.MedicoId &&
             c.IdEstado != (int)EstadoCita.Cancelada &&
+            c.IdEstado != (int)EstadoCita.Anulada &&
             Math.Abs(EF.Functions.DateDiffMinute(c.FechaHora, dto.FechaHora)) < 30);
         if (conflicto)
             throw new BusinessException("El médico ya tiene una cita en ese horario (margen de 30 minutos)");
@@ -108,6 +109,8 @@ public class CitaService : ICitaService
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
         if (cita.Estado == EstadoCita.Cancelada)
             throw new BusinessException("No se puede modificar una cita cancelada");
+        if (cita.Estado == EstadoCita.Anulada)
+            throw new BusinessException("No se puede modificar una cita anulada por el paciente");
         if (!_db.Pacientes.Any(p => p.IdPaciente == dto.PacienteId))
             throw new NotFoundException($"Paciente con ID {dto.PacienteId} no encontrado");
         if (!_db.Medicos.Any(m => m.IdMedico == dto.MedicoId))
@@ -132,10 +135,29 @@ public class CitaService : ICitaService
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
         if (cita.Estado == EstadoCita.Cancelada)
             throw new BusinessException("La cita ya está cancelada");
+        if (cita.Estado == EstadoCita.Anulada)
+            throw new BusinessException("La cita ya fue anulada por el paciente");
         if (cita.Estado == EstadoCita.Completada)
             throw new BusinessException("No se puede cancelar una cita que ya fue completada");
 
         cita.Estado = EstadoCita.Cancelada;
+        cita.FechaModificacion = DateTime.Now;
+        _db.SaveChanges();
+        return ObtenerPorId(id);
+    }
+
+    public CitaResponseDto Anular(int id)
+    {
+        var cita = _db.Citas.FirstOrDefault(c => c.Id == id)
+            ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
+        if (cita.Estado == EstadoCita.Anulada)
+            throw new BusinessException("La cita ya fue anulada");
+        if (cita.Estado == EstadoCita.Cancelada)
+            throw new BusinessException("La cita ya está cancelada por la clínica");
+        if (cita.Estado == EstadoCita.Completada)
+            throw new BusinessException("No se puede anular una cita que ya fue completada");
+
+        cita.Estado = EstadoCita.Anulada;
         cita.FechaModificacion = DateTime.Now;
         _db.SaveChanges();
         return ObtenerPorId(id);

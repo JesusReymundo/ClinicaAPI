@@ -1,3 +1,4 @@
+## .NET
 bin/
 obj/
 *.user
@@ -5,3 +6,12 @@ obj/
 *.suo
 *.userprefs
 appsettings.Development.json
+
+## Node / Frontend
+node_modules/
+dist/
+.vite/
+*.local
+
+## Documentos temporales de Office
+~$*

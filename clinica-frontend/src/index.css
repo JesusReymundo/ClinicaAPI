@@ -1,0 +1,3 @@
+/* reset global — los estilos principales están en App.css */
+* { box-sizing: border-box; }
+body { margin: 0; }
