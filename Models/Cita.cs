@@ -10,7 +10,10 @@ public class Cita
     [Column("IdCita")]
     public int Id { get; set; }
 
+    [Column("IdPaciente")]
     public int PacienteId { get; set; }
+
+    [Column("IdMedico")]
     public int MedicoId { get; set; }
 
     [Column("IdEstado")]
