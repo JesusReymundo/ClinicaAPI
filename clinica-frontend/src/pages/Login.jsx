@@ -3,66 +3,74 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const DEMOS = [
-  { role: 'admin',    icon: '👨‍💼', label: 'Administrador', desc: 'Acceso total al sistema', user: 'admin',    pass: 'admin123',  className: 'admin' },
-  { role: 'doctor',   icon: '🩺',  label: 'Médico',         desc: 'Gestión de sus citas',   user: 'doctor',   pass: 'medico123', className: 'doctor' },
-  { role: 'paciente', icon: '🧑',  label: 'Paciente',       desc: 'Ver y solicitar citas',   user: 'paciente', pass: 'cita123',   className: 'paciente' },
+  { role: 'admin',    icon: '👨‍💼', label: 'Administrador', desc: 'Acceso total al sistema',  user: 'jesus_admin',   pass: 'Admin@2024',   color: '#6B21A8' },
+  { role: 'doctor',   icon: '🩺',  label: 'Médico',         desc: 'Gestión de sus citas',    user: 'aldair_santos', pass: 'Doctor@2024',  color: '#0284C7' },
+  { role: 'paciente', icon: '🧑',  label: 'Paciente',       desc: 'Ver y solicitar citas',   user: 'paola_medina',  pass: 'Paciente123',  color: '#059669' },
+];
+
+const MARKETING = [
+  { icon: '❤️', title: 'Atención con Calidez', desc: 'Médicos especializados comprometidos con tu bienestar' },
+  { icon: '🔬', title: 'Tecnología Avanzada',   desc: 'Equipos de última generación para diagnósticos precisos' },
+  { icon: '📅', title: 'Citas Fáciles',         desc: 'Agenda, cancela o reprograma desde cualquier lugar' },
 ];
 
 export default function Login() {
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]       = useState({ username: '', password: '' });
+  const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [openDemo, setOpenDemo] = useState(null); // índice del acordeón abierto
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username || !form.password) { setError('Complete todos los campos'); return; }
     setLoading(true); setError('');
-    await new Promise(r => setTimeout(r, 500));
-    const ok = login(form.username, form.password);
+    const ok = await login(form.username, form.password);
     if (ok) navigate('/');
     else { setError('Usuario o contraseña incorrectos'); setLoading(false); }
   };
 
-  const useDemo = (u, p) => setForm({ username: u, password: p });
+  const selectDemo = (d, idx) => {
+    setForm({ username: d.user, password: d.pass });
+    setOpenDemo(openDemo === idx ? null : idx);
+  };
 
   return (
     <div className="login-page">
-      {/* Panel izquierdo - Branding */}
+
+      {/* ── PANEL IZQUIERDO — Branding ── */}
       <div className="login-left">
         <div className="login-branding">
-          <div className="login-logo">🏥</div>
-          <h1>ClinicaSalud</h1>
-          <p>Sistema Integral de Gestión Médica</p>
 
-          <div className="login-features">
-            <div className="login-feature">✅ Registro y gestión de pacientes</div>
-            <div className="login-feature">✅ Administración de médicos</div>
-            <div className="login-feature">✅ Agendamiento de citas médicas</div>
-            <div className="login-feature">✅ Control de historial clínico</div>
-            <div className="login-feature">✅ Recetas y facturación</div>
+          {/* Logo + nombre */}
+          <div className="login-logo-wrap">
+            <div className="login-logo-icon">🏥</div>
+          </div>
+          <h1 className="login-clinic-name">Clínica IDAT</h1>
+          <p className="login-tagline">"Tu salud, nuestra misión"</p>
+
+          {/* Cards de marketing */}
+          <div className="login-mkt-cards">
+            {MARKETING.map((m, i) => (
+              <div key={i} className="login-mkt-card">
+                <span className="login-mkt-icon">{m.icon}</span>
+                <div>
+                  <div className="login-mkt-title">{m.title}</div>
+                  <div className="login-mkt-desc">{m.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="login-stats">
-            <div className="login-stat">
-              <div className="login-stat-num">23+</div>
-              <div className="login-stat-label">Tablas DB</div>
-            </div>
-            <div className="login-stat">
-              <div className="login-stat-num">3</div>
-              <div className="login-stat-label">Roles</div>
-            </div>
-            <div className="login-stat">
-              <div className="login-stat-num">REST</div>
-              <div className="login-stat-label">API .NET 8</div>
-            </div>
-          </div>
+          {/* Decoración */}
+          <div className="login-deco-bar" />
+          <p className="login-deco-text">IDAT · 5to Ciclo · Desarrollo de Servicios Web · 2024</p>
         </div>
       </div>
 
-      {/* Panel derecho - Formulario */}
+      {/* ── PANEL DERECHO — Formulario ── */}
       <div className="login-right">
         <div className="login-box">
           <h2>Bienvenido</h2>
@@ -93,7 +101,7 @@ export default function Login() {
                   style={{ paddingRight: 40 }}
                 />
                 <button type="button" onClick={() => setShowPass(p => !p)}
-                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#94A3B8' }}>
+                  style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'#94A3B8' }}>
                   {showPass ? '🙈' : '👁️'}
                 </button>
               </div>
@@ -103,22 +111,43 @@ export default function Login() {
             </button>
           </form>
 
+          {/* ── Acordeón de accesos demo ── */}
           <div className="login-divider"><span>accesos de demostración</span></div>
 
-          <div className="demo-section">
-            <p>Haga clic para cargar credenciales:</p>
-            <div className="demo-cards">
-              {DEMOS.map(d => (
-                <div key={d.role} className={`demo-card ${d.className}`} onClick={() => useDemo(d.user, d.pass)}>
-                  <span className="demo-card-icon">{d.icon}</span>
-                  <div className="demo-card-info">
-                    <strong>{d.label}</strong>
-                    <small>{d.user} / {d.pass}</small>
-                  </div>
-                  <span className="demo-card-arrow">→</span>
+          <div className="demo-accordion">
+            {DEMOS.map((d, idx) => {
+              const isOpen = openDemo === idx;
+              return (
+                <div key={d.role} className={`demo-acc-item ${isOpen ? 'open' : ''}`}
+                  style={{ '--acc-color': d.color }}>
+                  <button className="demo-acc-header" onClick={() => selectDemo(d, idx)}>
+                    <span className="demo-acc-icon" style={{ background: d.color + '20', color: d.color }}>
+                      {d.icon}
+                    </span>
+                    <div className="demo-acc-info">
+                      <span className="demo-acc-label">{d.label}</span>
+                      <span className="demo-acc-subdesc">{d.desc}</span>
+                    </div>
+                    <span className="demo-acc-chevron" style={{ color: d.color }}>
+                      {isOpen ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="demo-acc-body">
+                      <div className="demo-cred-row">
+                        <span className="demo-cred-label">Usuario:</span>
+                        <code className="demo-cred-val">{d.user}</code>
+                      </div>
+                      <div className="demo-cred-row">
+                        <span className="demo-cred-label">Contraseña:</span>
+                        <code className="demo-cred-val">{d.pass}</code>
+                      </div>
+                      <p className="demo-acc-hint">✅ Credenciales cargadas — presione <strong>Ingresar</strong></p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
           <div className="login-footer">
