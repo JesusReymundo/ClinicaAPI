@@ -5,32 +5,45 @@ import Dashboard from './pages/Dashboard';
 import Pacientes from './pages/Pacientes';
 import Medicos from './pages/Medicos';
 import Citas from './pages/Citas';
+import SolicitarCita from './pages/SolicitarCita';
+import MisCitasPaciente from './pages/MisCitasPaciente';
+import Boletas from './pages/Boletas';
+import Tickets from './pages/Tickets';
+import GestionTickets from './pages/GestionTickets';
 import './App.css';
 
 const ROL_CONFIG = {
   admin: {
     color: '#6B21A8', label: 'Administrador',
     nav: [
-      { to: '/', icon: '📊', label: 'Dashboard', exact: true },
-      { to: '/pacientes', icon: '👥', label: 'Pacientes' },
-      { to: '/medicos', icon: '🩺', label: 'Médicos' },
-      { to: '/citas', icon: '📅', label: 'Citas Médicas' },
+      { to: '/',                   icon: '📊', label: 'Dashboard',          exact: true },
+      { to: '/pacientes',          icon: '👥', label: 'Pacientes' },
+      { to: '/medicos',            icon: '🩺', label: 'Médicos' },
+      { to: '/citas',              icon: '📅', label: 'Citas Médicas' },
+      { to: '/mis-citas-paciente', icon: '🏥', label: 'Mis Citas (Personal)' },
+      { to: '/boletas',            icon: '🧾', label: 'Mis Boletas' },
+      { to: '/tickets',            icon: '🎫', label: 'Tickets Soporte' },
     ],
   },
   doctor: {
     color: '#0284C7', label: 'Médico',
     nav: [
-      { to: '/', icon: '📊', label: 'Mi Panel', exact: true },
-      { to: '/citas', icon: '📅', label: 'Mis Citas' },
-      { to: '/pacientes', icon: '👥', label: 'Pacientes' },
+      { to: '/',                   icon: '📊', label: 'Mi Panel',             exact: true },
+      { to: '/citas',              icon: '📅', label: 'Mis Citas (Médico)' },
+      { to: '/mis-citas-paciente', icon: '🏥', label: 'Mis Citas (Paciente)' },
+      { to: '/pacientes',          icon: '👥', label: 'Pacientes' },
+      { to: '/boletas',            icon: '🧾', label: 'Mis Boletas' },
+      { to: '/tickets',            icon: '🎫', label: 'Reportar Problema' },
     ],
   },
   paciente: {
     color: '#059669', label: 'Paciente',
     nav: [
-      { to: '/', icon: '🏥', label: 'Inicio', exact: true },
-      { to: '/citas', icon: '📅', label: 'Mis Citas' },
-      { to: '/medicos', icon: '🩺', label: 'Ver Médicos' },
+      { to: '/',               icon: '🏥', label: 'Inicio',          exact: true },
+      { to: '/solicitar-cita', icon: '➕', label: 'Solicitar Cita' },
+      { to: '/mis-citas-paciente', icon: '📅', label: 'Mis Citas' },
+      { to: '/boletas',        icon: '🧾', label: 'Mis Boletas' },
+      { to: '/tickets',        icon: '🎫', label: 'Reportar Problema' },
     ],
   },
 };
@@ -48,7 +61,7 @@ function Sidebar() {
       <div className="sidebar-brand">
         <span className="brand-icon">🏥</span>
         <div>
-          <div className="brand-name">ClinicaSalud</div>
+          <div className="brand-name">Clínica IDAT</div>
           <div className="brand-sub">Sistema Médico</div>
         </div>
       </div>
@@ -107,10 +120,14 @@ function Layout() {
         </header>
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/pacientes" element={<Pacientes />} />
-            <Route path="/medicos" element={<Medicos />} />
-            <Route path="/citas" element={<Citas />} />
+            <Route path="/"                   element={<Dashboard />} />
+            <Route path="/pacientes"          element={<Pacientes />} />
+            <Route path="/medicos"            element={<Medicos />} />
+            <Route path="/citas"              element={<Citas />} />
+            <Route path="/solicitar-cita"     element={<SolicitarCita />} />
+            <Route path="/mis-citas-paciente" element={<MisCitasPaciente />} />
+            <Route path="/boletas"            element={<Boletas />} />
+            <Route path="/tickets"            element={user.role === 'admin' ? <GestionTickets /> : <Tickets />} />
           </Routes>
         </main>
       </div>

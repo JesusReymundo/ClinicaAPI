@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const DEMOS = [
-  { role: 'admin',    icon: '👨‍💼', label: 'Administrador', desc: 'Acceso total al sistema',  user: 'admin',     pass: 'Admin@2024',   color: '#6B21A8' },
-  { role: 'doctor',   icon: '🩺',  label: 'Médico',         desc: 'Gestión de sus citas',    user: 'dr_aldair', pass: 'Doctor@2024',  color: '#0284C7' },
-  { role: 'paciente', icon: '🧑',  label: 'Paciente',       desc: 'Ver y solicitar citas',   user: 'paciente1', pass: 'Paciente123',  color: '#059669' },
+  { role: 'admin',    icon: '👨‍💼', label: 'Administrador', desc: 'Acceso total al sistema',  user: 'jesus_admin',   pass: 'Admin@2024',  color: '#6B21A8' },
+  { role: 'doctor',   icon: '🩺',  label: 'Médico',         desc: 'Gestión de sus citas',    user: 'aldair_santos', pass: 'Doctor@2024', color: '#0284C7' },
+  { role: 'paciente', icon: '🧑',  label: 'Paciente',       desc: 'Ver y solicitar citas',   user: 'paola_medina',  pass: 'Paciente123', color: '#059669' },
 ];
 
 const MARKETING = [

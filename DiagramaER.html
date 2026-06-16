@@ -2,760 +2,807 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagrama Entidad-Relación — ClinicaDB</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<title>Diagrama ER — ClinicaDB</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f4ff; padding: 24px; color: #1e293b; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#1e1e2e; font-family:'Segoe UI',sans-serif; overflow:hidden; color:#fff; user-select:none; }
 
-  h1 { text-align: center; color: #6B21A8; font-size: 30px; margin-bottom: 4px; }
-  .sub { text-align: center; color: #64748B; font-size: 14px; margin-bottom: 24px; }
+/* ── Toolbar ── */
+#toolbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:#13131f; border-bottom:1px solid #333;
+  display:flex; align-items:center; gap:12px; padding:8px 16px; height:46px;
+}
+#toolbar h1 { font-size:14px; font-weight:700; color:#a78bfa; white-space:nowrap; }
+#toolbar .badge { background:#7c3aed; color:#fff; border-radius:10px; padding:2px 8px; font-size:11px; }
+#toolbar .sep { width:1px; height:24px; background:#333; }
+.tbtn {
+  background:#252535; border:1px solid #444; color:#ccc; border-radius:6px;
+  padding:4px 10px; cursor:pointer; font-size:12px; white-space:nowrap;
+}
+.tbtn:hover { background:#333; color:#fff; }
+#search { background:#252535; border:1px solid #444; color:#fff; border-radius:6px; padding:4px 10px; font-size:12px; width:160px; outline:none; }
+#search::placeholder { color:#666; }
+#info-bar { margin-left:auto; font-size:11px; color:#666; }
 
-  .diagrama-box {
-    background: white; border-radius: 16px; padding: 24px;
-    box-shadow: 0 4px 24px rgba(107,33,168,0.12); overflow-x: auto;
-    margin-bottom: 24px;
-  }
+/* ── Viewport ── */
+#viewport { position:fixed; top:46px; left:0; right:0; bottom:0; overflow:hidden; cursor:grab; }
+#viewport.panning { cursor:grabbing; }
 
-  .leyenda {
-    display: flex; flex-wrap: wrap; gap: 10px;
-    justify-content: center; margin-bottom: 28px;
-  }
-  .ley-item {
-    display: flex; align-items: center; gap: 8px;
-    background: white; padding: 8px 16px; border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; font-weight: 500;
-  }
-  .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+/* ── Canvas ── */
+#canvas { position:relative; width:2000px; height:1600px; }
 
-  .tablas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px; margin-bottom: 28px;
-  }
-  .tabla-card {
-    background: white; border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;
-  }
-  .tabla-header {
-    padding: 10px 16px; font-weight: 700; font-size: 13px;
-    display: flex; align-items: center; gap: 8px; color: white;
-  }
-  .tabla-header .badge-pk {
-    font-size: 10px; background: rgba(255,255,255,0.3);
-    padding: 1px 6px; border-radius: 8px;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  th { background: #F8FAFC; color: #64748B; font-size: 11px;
-       text-transform: uppercase; letter-spacing: 0.5px;
-       padding: 6px 12px; text-align: left; border-bottom: 1px solid #E2E8F0; }
-  td { padding: 6px 12px; border-bottom: 1px solid #F1F5F9; color: #374151; }
-  tr:last-child td { border-bottom: none; }
-  .tag-pk { background: #FDE68A; color: #92400E; font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
-  .tag-fk { background: #BFDBFE; color: #1E40AF; font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
-  .tag-uq { background: #D1FAE5; color: #065F46; font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
-  .tag-nn { background: #FEE2E2; color: #991B1B; font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-  .type { color: #94A3B8; font-size: 11.5px; font-family: 'Courier New', monospace; }
-  .nota { padding: 6px 12px; background: #F0FDF4; font-size: 11px; color: #065F46; }
+/* ── SVG lines overlay ── */
+#svg-overlay {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:1;
+}
 
-  .rel-section {
-    background: white; border-radius: 16px; padding: 20px 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px;
-  }
-  .rel-section h2 { color: #6B21A8; font-size: 18px; margin-bottom: 14px; }
-  .rel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
-  .rel-item { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
-  .rel-item .arrow { color: #6B21A8; font-weight: 700; margin: 0 6px; }
-  .rel-item .rel-type { color: #64748B; font-size: 11px; display: block; margin-top: 2px; }
+/* ── Table boxes ── */
+.dbt {
+  position:absolute; width:210px;
+  background:#fff; border-radius:4px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.5);
+  z-index:10; cursor:move;
+  transition:box-shadow .15s;
+  border:2px solid transparent;
+}
+.dbt:hover { box-shadow:0 4px 24px rgba(0,0,0,0.7); }
+.dbt.highlighted { border-color:#f59e0b !important; box-shadow:0 0 0 3px rgba(245,158,11,0.4) !important; }
 
-  .seed-section {
-    background: white; border-radius: 16px; padding: 20px 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px;
-  }
-  .seed-section h2 { color: #6B21A8; font-size: 18px; margin-bottom: 14px; }
-  .seed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-  .seed-card {
-    border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px 14px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .seed-name { font-size: 13px; font-weight: 600; color: #374151; }
-  .seed-count { font-size: 22px; font-weight: 700; color: #6B21A8; }
+.dbt-hdr {
+  padding:6px 10px; font-size:12px; font-weight:700;
+  color:#fff; border-radius:2px 2px 0 0;
+  letter-spacing:.3px; display:flex; align-items:center; gap:6px;
+}
+.dbt-hdr .tbl-icon { font-size:11px; opacity:.8; }
 
-  .section-title { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 14px; display: block; }
+.dbt-cols { overflow:hidden; border-radius:0 0 2px 2px; }
+
+.dbt-row {
+  display:flex; align-items:center; gap:0;
+  padding:2px 8px; font-size:10.5px; border-bottom:1px solid #f0f0f0;
+  background:#fff; min-height:22px; gap:4px;
+}
+.dbt-row:last-child { border-bottom:none; }
+.dbt-row.pk { background:#fff8e1; }
+.dbt-row.fk { background:#e8f4fd; }
+.dbt-row.pk.fk { background:#f3e5f5; }
+
+.col-icon { width:14px; font-size:9px; flex-shrink:0; text-align:center; }
+.col-name { flex:1; color:#1a1a2e; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.col-name.pk-name { font-weight:700; }
+.col-type { color:#888; font-size:9.5px; white-space:nowrap; }
+.col-tag { font-size:8px; color:#fff; padding:0 3px; border-radius:2px; margin-left:2px; flex-shrink:0; }
+.tag-pk { background:#f59e0b; }
+.tag-fk { background:#3b82f6; }
+.tag-uq { background:#8b5cf6; }
+.tag-nn { background:#6b7280; }
+
+/* ── Legend ── */
+#legend {
+  position:fixed; bottom:16px; left:16px; z-index:100;
+  background:#13131f; border:1px solid #333; border-radius:8px;
+  padding:10px 14px; display:flex; flex-direction:column; gap:6px;
+}
+#legend h4 { font-size:10px; color:#888; text-transform:uppercase; margin-bottom:2px; }
+.leg-row { display:flex; align-items:center; gap:6px; font-size:10px; color:#ccc; }
+.leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.leg-line { display:flex; align-items:center; gap:6px; font-size:10px; color:#aaa; }
+.leg-svg { width:30px; height:12px; }
+
+/* ── Minimap ── */
+#minimap {
+  position:fixed; bottom:16px; right:16px; z-index:100;
+  width:160px; height:110px; background:#13131f;
+  border:1px solid #333; border-radius:6px; overflow:hidden;
+}
+#minimap-canvas { width:100%; height:100%; }
+#minimap-viewport { position:absolute; border:2px solid #f59e0b; pointer-events:none; }
 </style>
 </head>
 <body>
 
-<h1>⚕️ Diagrama Entidad-Relación — ClinicaDB</h1>
-<p class="sub">Sistema de Gestión de Citas Médicas · IDAT 5to Ciclo · Desarrollo de Servicios Web · 2024</p>
-
-<div class="leyenda">
-  <div class="ley-item"><div class="dot" style="background:#6B21A8"></div>Núcleo: Usuarios / Roles</div>
-  <div class="ley-item"><div class="dot" style="background:#1D4ED8"></div>Actores: Médicos / Pacientes</div>
-  <div class="ley-item"><div class="dot" style="background:#059669"></div>Centro: Citas</div>
-  <div class="ley-item"><div class="dot" style="background:#D97706"></div>Clínico: Recetas / Triaje / Historial</div>
-  <div class="ley-item"><div class="dot" style="background:#DC2626"></div>Financiero: Facturas / Pagos</div>
-  <div class="ley-item"><div class="dot" style="background:#0891B2"></div>Catálogos</div>
-  <div class="ley-item"><div class="dot" style="background:#64748B"></div>Soporte: Auditoría / Cancelaciones</div>
+<div id="toolbar">
+  <h1>🗃️ Diagrama ER — ClinicaDB</h1>
+  <span class="badge">24 tablas</span>
+  <div class="sep"></div>
+  <button class="tbtn" onclick="zoom(1.2)">+ Zoom</button>
+  <button class="tbtn" onclick="zoom(0.8)">− Zoom</button>
+  <button class="tbtn" onclick="resetView()">⟳ Reset</button>
+  <button class="tbtn" onclick="fitAll()">⤢ Ajustar</button>
+  <div class="sep"></div>
+  <input id="search" type="text" placeholder="Buscar tabla..." oninput="searchTable(this.value)">
+  <div class="sep"></div>
+  <span style="font-size:11px;color:#888">🖱️ Drag para mover tablas &nbsp;|&nbsp; Ctrl+Drag para hacer pan &nbsp;|&nbsp; Scroll para zoom</span>
+  <span id="info-bar">SQL Server · ClinicaDB · 24 tablas · 24 FKs</span>
 </div>
 
-<!-- DIAGRAMA MERMAID -->
-<div class="diagrama-box">
-<div class="mermaid">
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor':'#EDE9FE','primaryTextColor':'#1e293b','primaryBorderColor':'#6B21A8','lineColor':'#6B21A8','fontSize':'12px'}}}%%
-erDiagram
-
-    ROLES {
-        int IdRol PK
-        varchar NombreRol
-        varchar Descripcion
-        bit Activo
-        datetime FechaCreacion
-    }
-    USUARIOS {
-        int IdUsuario PK
-        int IdRol FK
-        varchar Nombres
-        varchar Apellidos
-        varchar DNI
-        date FechaNacimiento
-        char Genero
-        varchar Direccion
-        varchar Username
-        varchar PasswordHash
-        bit Activo
-        datetime FechaCreacion
-    }
-    CONTACTOS {
-        int IdContacto PK
-        int IdUsuario FK
-        varchar TipoContacto
-        varchar Valor
-        bit EsPrincipal
-        datetime FechaCreacion
-    }
-    EMPRESAS {
-        int IdEmpresa PK
-        varchar RazonSocial
-        varchar RUC
-        varchar Direccion
-        varchar Telefono
-        varchar Email
-        bit Activo
-    }
-    TIPOASEGURADO {
-        int IdTipo PK
-        varchar Nombre
-    }
-    ESPECIALIDADES {
-        int IdEspecialidad PK
-        varchar Nombre
-        varchar Descripcion
-        bit Activo
-    }
-    MEDICOS {
-        int IdMedico PK
-        int IdUsuario FK
-        int IdEspecialidad FK
-        varchar ColegioMedico
-        varchar Consultorio
-        decimal TarifaConsulta
-        datetime FechaCreacion
-    }
-    PACIENTES {
-        int IdPaciente PK
-        int IdUsuario FK
-        int IdTipoAsegurado FK
-        int IdEmpresa FK
-        varchar NumeroSeguro
-        varchar GrupoSanguineo
-        varchar Alergias
-        datetime FechaCreacion
-    }
-    ESTADOSCITA {
-        int IdEstado PK
-        varchar Nombre
-    }
-    CITAS {
-        int IdCita PK
-        int IdPaciente FK
-        int IdMedico FK
-        int IdEstado FK
-        datetime FechaHora
-        varchar Motivo
-        varchar Observaciones
-        datetime FechaCreacion
-        datetime FechaModificacion
-    }
-    MEDICAMENTOS {
-        int IdMedicamento PK
-        varchar Nombre
-        varchar Presentacion
-        varchar Concentracion
-        varchar Laboratorio
-        decimal Precio
-        int Stock
-        bit Activo
-    }
-    RECETAS {
-        int IdReceta PK
-        int IdCita FK
-        varchar Diagnostico
-        varchar Indicaciones
-        datetime FechaEmision
-    }
-    DETALLERECETA {
-        int IdDetalle PK
-        int IdReceta FK
-        int IdMedicamento FK
-        varchar Dosis
-        varchar Frecuencia
-        varchar Duracion
-        int Cantidad
-    }
-    FACTURAS {
-        int IdFactura PK
-        int IdCita FK
-        varchar NumeroFactura
-        varchar Serie
-        decimal Subtotal
-        decimal IGV
-        decimal Total
-        varchar EstadoPago
-        datetime FechaEmision
-    }
-    TIPOCONSULTA {
-        int IdTipoConsulta PK
-        varchar Nombre
-        varchar Descripcion
-        decimal TarifaExtra
-    }
-    CONSULTORIOS {
-        int IdConsultorio PK
-        varchar Nombre
-        varchar Piso
-        bit Disponible
-    }
-    HORARIOMEDICO {
-        int IdHorario PK
-        int IdMedico FK
-        tinyint DiaSemana
-        time HoraInicio
-        time HoraFin
-        int IdConsultorio FK
-        bit Activo
-    }
-    TRIAJE {
-        int IdTriaje PK
-        int IdCita FK
-        decimal Peso
-        decimal Talla
-        int PresionSistolica
-        int PresionDiastolica
-        int FrecuenciaCardiaca
-        decimal Temperatura
-        decimal Saturacion
-        datetime FechaRegistro
-    }
-    HISTORIALCLINICO {
-        int IdHistorial PK
-        int IdPaciente FK
-        int IdCita FK
-        varchar Diagnostico
-        varchar Tratamiento
-        varchar Evolucion
-        datetime FechaRegistro
-    }
-    METODOSPAGO {
-        int IdMetodo PK
-        varchar Nombre
-    }
-    PAGOS {
-        int IdPago PK
-        int IdFactura FK
-        int IdMetodo FK
-        decimal Monto
-        varchar NroOperacion
-        datetime FechaPago
-    }
-    SEGUROS {
-        int IdSeguro PK
-        int IdPaciente FK
-        varchar NombreSeguro
-        varchar NumeroPoliza
-        date FechaVigencia
-        decimal CoberturaMax
-        bit Activo
-    }
-    CANCELACIONESCITA {
-        int IdCancelacion PK
-        int IdCita FK
-        varchar Motivo
-        varchar CanceladoPor
-        datetime FechaCancelacion
-    }
-    AUDITORIALOG {
-        int IdLog PK
-        int IdUsuario FK
-        varchar Tabla
-        varchar Accion
-        varchar Descripcion
-        datetime FechaAccion
-    }
-
-    ROLES             ||--o{ USUARIOS          : "tiene"
-    USUARIOS          ||--o{ CONTACTOS         : "posee"
-    USUARIOS          ||--o| MEDICOS           : "es medico"
-    USUARIOS          ||--o| PACIENTES         : "es paciente"
-    USUARIOS          ||--o{ AUDITORIALOG      : "genera"
-    ESPECIALIDADES    ||--o{ MEDICOS           : "clasifica"
-    TIPOASEGURADO     ||--o{ PACIENTES         : "asegura"
-    EMPRESAS          ||--o{ PACIENTES         : "vincula"
-    MEDICOS           ||--o{ CITAS             : "atiende"
-    MEDICOS           ||--o{ HORARIOMEDICO     : "tiene"
-    CONSULTORIOS      ||--o{ HORARIOMEDICO     : "asignado"
-    PACIENTES         ||--o{ CITAS             : "agenda"
-    PACIENTES         ||--o{ HISTORIALCLINICO  : "acumula"
-    PACIENTES         ||--o{ SEGUROS           : "posee"
-    ESTADOSCITA       ||--o{ CITAS             : "define"
-    CITAS             ||--o| RECETAS           : "genera"
-    CITAS             ||--o| FACTURAS          : "factura"
-    CITAS             ||--o| TRIAJE            : "registra"
-    CITAS             ||--o{ HISTORIALCLINICO  : "origina"
-    CITAS             ||--o| CANCELACIONESCITA : "cancela"
-    RECETAS           ||--o{ DETALLERECETA     : "contiene"
-    MEDICAMENTOS      ||--o{ DETALLERECETA     : "incluye"
-    FACTURAS          ||--o{ PAGOS             : "recibe"
-    METODOSPAGO       ||--o{ PAGOS             : "usa"
-</div>
-</div>
-
-<!-- DETALLE DE TABLAS -->
-<span class="section-title">📋 Detalle de las 24 Tablas</span>
-<div class="tablas-grid">
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 Roles <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdRol</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>NombreRol</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Descripcion</td><td class="type">VARCHAR(200)</td><td>—</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">1=Administrador · 2=Medico · 3=Paciente · 4=Recepcionista</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 EstadosCita <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdEstado</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-    </table>
-    <div class="nota">1=Pendiente · 2=Confirmada · 3=Cancelada · 4=Completada · 5=Anulada</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 Especialidades <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdEspecialidad</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(100)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Descripcion</td><td class="type">VARCHAR(300)</td><td>—</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">1=Cardiología · 2=Med. General · 3=Pediatría · 4=Dermatología · 5=Traumatología</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 TipoAsegurado <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdTipo</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-    </table>
-    <div class="nota">1=Particular · 2=Corporativo · 3=EsSalud · 4=SIS</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 TipoConsulta <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdTipoConsulta</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Descripcion</td><td class="type">VARCHAR(200)</td><td>—</td></tr>
-      <tr><td>TarifaExtra</td><td class="type">DECIMAL(10,2)</td><td>DEFAULT 0</td></tr>
-    </table>
-    <div class="nota">Primera Vez · Seguimiento · Urgencia (+S/30) · Teleconsulta (−S/20)</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#0891B2">📂 MetodosPago <span class="badge-pk">Catálogo</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdMetodo</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-    </table>
-    <div class="nota">Efectivo · Tarjeta Crédito · Débito · Transferencia · Seguro · Yape/Plin</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#6B21A8">👤 Usuarios <span class="badge-pk">Tabla Madre</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdUsuario</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdRol</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Roles</td></tr>
-      <tr><td>Nombres</td><td class="type">VARCHAR(100)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Apellidos</td><td class="type">VARCHAR(100)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>DNI</td><td class="type">VARCHAR(8)</td><td><span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>FechaNacimiento</td><td class="type">DATE</td><td>—</td></tr>
-      <tr><td>Genero</td><td class="type">CHAR(1)</td><td>M / F</td></tr>
-      <tr><td>Direccion</td><td class="type">VARCHAR(200)</td><td>—</td></tr>
-      <tr><td>Username</td><td class="type">VARCHAR(50)</td><td><span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>PasswordHash</td><td class="type">VARCHAR(256)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-      <tr><td>FechaModificacion</td><td class="type">DATETIME</td><td>—</td></tr>
-    </table>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#6B21A8">📞 Contactos</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdContacto</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdUsuario</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Usuarios</td></tr>
-      <tr><td>TipoContacto</td><td class="type">VARCHAR(20)</td><td>Telefono / Email / WhatsApp</td></tr>
-      <tr><td>Valor</td><td class="type">VARCHAR(150)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>EsPrincipal</td><td class="type">BIT</td><td>DEFAULT 0</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#1D4ED8">🩺 Medicos</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdMedico</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdUsuario</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>IdEspecialidad</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Especialidades</td></tr>
-      <tr><td>ColegioMedico</td><td class="type">VARCHAR(20)</td><td><span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>Consultorio</td><td class="type">VARCHAR(50)</td><td>—</td></tr>
-      <tr><td>TarifaConsulta</td><td class="type">DECIMAL(10,2)</td><td>—</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">28 médicos · Tarifas: Cardio S/120 · MedGen S/80 · Pedia S/90 · Derma S/100 · Trauma S/110</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#1D4ED8">🏥 Pacientes</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdPaciente</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdUsuario</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>IdTipoAsegurado</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → TipoAsegurado</td></tr>
-      <tr><td>IdEmpresa</td><td class="type">INT</td><td><span class="tag-fk">FK</span> NULL</td></tr>
-      <tr><td>NumeroSeguro</td><td class="type">VARCHAR(50)</td><td>—</td></tr>
-      <tr><td>GrupoSanguineo</td><td class="type">VARCHAR(5)</td><td>A+/A-/B+/B-/AB+/AB-/O+/O-</td></tr>
-      <tr><td>Alergias</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">IDs 1–50: Particular · 51–65: Corporativo · 66–80: EsSalud · 81–100: SIS</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#1D4ED8">🏢 Empresas</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdEmpresa</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>RazonSocial</td><td class="type">VARCHAR(200)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>RUC</td><td class="type">VARCHAR(11)</td><td><span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>Direccion</td><td class="type">VARCHAR(200)</td><td>—</td></tr>
-      <tr><td>Telefono</td><td class="type">VARCHAR(20)</td><td>—</td></tr>
-      <tr><td>Email</td><td class="type">VARCHAR(150)</td><td>—</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">10 empresas: IDAT, Minera Andina, Retail Peru, BancoPeru, TecnoSoft…</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#059669">📅 Citas <span class="badge-pk">Centro</span></div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdCita</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdPaciente</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Pacientes</td></tr>
-      <tr><td>IdMedico</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Medicos</td></tr>
-      <tr><td>IdEstado</td><td class="type">INT</td><td><span class="tag-fk">FK</span> DEFAULT 1</td></tr>
-      <tr><td>FechaHora</td><td class="type">DATETIME</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Motivo</td><td class="type">VARCHAR(300)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Observaciones</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>FechaCreacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-      <tr><td>FechaModificacion</td><td class="type">DATETIME</td><td>—</td></tr>
-    </table>
-    <div class="nota">~952 citas · rango −180 días a +20 días desde hoy</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#059669">🕐 HorarioMedico</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdHorario</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdMedico</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Medicos</td></tr>
-      <tr><td>DiaSemana</td><td class="type">TINYINT</td><td>1=Lun…5=Vie</td></tr>
-      <tr><td>HoraInicio</td><td class="type">TIME</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>HoraFin</td><td class="type">TIME</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>IdConsultorio</td><td class="type">INT</td><td><span class="tag-fk">FK</span> NULL</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">140 registros · 28 médicos × 5 días (Lunes–Viernes)</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#059669">🏛️ Consultorios</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdConsultorio</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Piso</td><td class="type">VARCHAR(10)</td><td>—</td></tr>
-      <tr><td>Disponible</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">101, 102 (Piso 1) · 201, 202 (Piso 2) · 301 (Piso 3)</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#D97706">📋 Recetas</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdReceta</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdCita</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>Diagnostico</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>Indicaciones</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>FechaEmision</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">~388 recetas · 80% de citas completadas (IdCita % 5 ≠ 0)</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#D97706">💊 Medicamentos</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdMedicamento</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>Nombre</td><td class="type">VARCHAR(200)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Presentacion</td><td class="type">VARCHAR(100)</td><td>Tabletas/Cápsulas/Jarabe/Inyectable</td></tr>
-      <tr><td>Concentracion</td><td class="type">VARCHAR(50)</td><td>—</td></tr>
-      <tr><td>Laboratorio</td><td class="type">VARCHAR(100)</td><td>—</td></tr>
-      <tr><td>Precio</td><td class="type">DECIMAL(10,2)</td><td>DEFAULT 0</td></tr>
-      <tr><td>Stock</td><td class="type">INT</td><td>DEFAULT 0</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">Paracetamol S/2.50 · Amoxicilina S/5.00 · Ibuprofeno S/3.00 · Omeprazol S/4.00 · Loratadina S/2.00</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#D97706">📄 DetalleReceta</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdDetalle</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdReceta</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Recetas</td></tr>
-      <tr><td>IdMedicamento</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Medicamentos</td></tr>
-      <tr><td>Dosis</td><td class="type">VARCHAR(100)</td><td>—</td></tr>
-      <tr><td>Frecuencia</td><td class="type">VARCHAR(100)</td><td>—</td></tr>
-      <tr><td>Duracion</td><td class="type">VARCHAR(50)</td><td>—</td></tr>
-      <tr><td>Cantidad</td><td class="type">INT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">~582 detalles · 1 o 2 medicamentos por receta</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#D97706">🩺 Triaje</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdTriaje</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdCita</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>Peso</td><td class="type">DECIMAL(5,2)</td><td>kg</td></tr>
-      <tr><td>Talla</td><td class="type">DECIMAL(5,2)</td><td>cm</td></tr>
-      <tr><td>PresionSistolica</td><td class="type">INT</td><td>mmHg</td></tr>
-      <tr><td>PresionDiastolica</td><td class="type">INT</td><td>mmHg</td></tr>
-      <tr><td>FrecuenciaCardiaca</td><td class="type">INT</td><td>lat/min</td></tr>
-      <tr><td>Temperatura</td><td class="type">DECIMAL(4,1)</td><td>°C</td></tr>
-      <tr><td>Saturacion</td><td class="type">DECIMAL(4,1)</td><td>% O₂</td></tr>
-      <tr><td>FechaRegistro</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-      <tr><td>Observaciones</td><td class="type">VARCHAR(300)</td><td>—</td></tr>
-    </table>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#D97706">📁 HistorialClinico</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdHistorial</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdPaciente</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Pacientes</td></tr>
-      <tr><td>IdCita</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Citas</td></tr>
-      <tr><td>Diagnostico</td><td class="type">VARCHAR(500)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Tratamiento</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>Evolucion</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>FechaRegistro</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">~485 registros · 1 por cada cita completada (IdEstado = 4)</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#1D4ED8">🛡️ Seguros</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdSeguro</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdPaciente</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Pacientes</td></tr>
-      <tr><td>NombreSeguro</td><td class="type">VARCHAR(100)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>NumeroPoliza</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>FechaVigencia</td><td class="type">DATE</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>CoberturaMax</td><td class="type">DECIMAL(10,2)</td><td>S/5000–15000</td></tr>
-      <tr><td>Activo</td><td class="type">BIT</td><td>DEFAULT 1</td></tr>
-    </table>
-    <div class="nota">30 registros · Corporativo (51–65) + EsSalud (66–80) · Rimac/Pacifico/La Positiva/Mapfre</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#DC2626">🧾 Facturas</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdFactura</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdCita</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>NumeroFactura</td><td class="type">VARCHAR(20)</td><td><span class="tag-uq">UNIQUE</span> F001-XXXXXX</td></tr>
-      <tr><td>Serie</td><td class="type">VARCHAR(5)</td><td>DEFAULT 'F001'</td></tr>
-      <tr><td>Subtotal</td><td class="type">DECIMAL(10,2)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>IGV</td><td class="type">DECIMAL(10,2)</td><td>18% del subtotal</td></tr>
-      <tr><td>Total</td><td class="type">DECIMAL(10,2)</td><td>Subtotal + IGV</td></tr>
-      <tr><td>EstadoPago</td><td class="type">VARCHAR(20)</td><td>Pendiente / Pagado / Anulado</td></tr>
-      <tr><td>FechaEmision</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">~485 facturas · ~5/6 Pagado · ~1/6 Pendiente</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#DC2626">💳 Pagos</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdPago</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdFactura</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Facturas</td></tr>
-      <tr><td>IdMetodo</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → MetodosPago</td></tr>
-      <tr><td>Monto</td><td class="type">DECIMAL(10,2)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>NroOperacion</td><td class="type">VARCHAR(50)</td><td>Para transferencias</td></tr>
-      <tr><td>FechaPago</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-      <tr><td>Observaciones</td><td class="type">VARCHAR(200)</td><td>—</td></tr>
-    </table>
-    <div class="nota">~404 pagos · distribuidos en 6 métodos de pago</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#64748B">❌ CancelacionesCita</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdCancelacion</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdCita</td><td class="type">INT</td><td><span class="tag-fk">FK</span> <span class="tag-uq">UNIQUE</span></td></tr>
-      <tr><td>Motivo</td><td class="type">VARCHAR(300)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>CanceladoPor</td><td class="type">VARCHAR(20)</td><td>Paciente / Medico / Sistema</td></tr>
-      <tr><td>FechaCancelacion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">~90 registros · citas con estado 3=Cancelada y 5=Anulada</div>
-  </div>
-
-  <div class="tabla-card">
-    <div class="tabla-header" style="background:#64748B">🔍 AuditoriaLog</div>
-    <table>
-      <tr><th>Columna</th><th>Tipo</th><th>Restricción</th></tr>
-      <tr><td>IdLog</td><td class="type">INT IDENTITY</td><td><span class="tag-pk">PK</span></td></tr>
-      <tr><td>IdUsuario</td><td class="type">INT</td><td><span class="tag-fk">FK</span> → Usuarios</td></tr>
-      <tr><td>Tabla</td><td class="type">VARCHAR(50)</td><td><span class="tag-nn">NOT NULL</span></td></tr>
-      <tr><td>Accion</td><td class="type">VARCHAR(20)</td><td>INSERT / UPDATE / DELETE</td></tr>
-      <tr><td>Descripcion</td><td class="type">VARCHAR(500)</td><td>—</td></tr>
-      <tr><td>FechaAccion</td><td class="type">DATETIME</td><td>DEFAULT GETDATE()</td></tr>
-    </table>
-    <div class="nota">Registro de cambios críticos del sistema para trazabilidad</div>
-  </div>
-
-</div>
-
-<!-- RELACIONES FK -->
-<div class="rel-section">
-  <h2>🔗 Relaciones del Modelo — 24 Foreign Keys</h2>
-  <div class="rel-grid">
-    <div class="rel-item">Roles <span class="arrow">→</span> Usuarios <span class="rel-type">1:N · FK_Usuarios_Roles</span></div>
-    <div class="rel-item">Usuarios <span class="arrow">→</span> Contactos <span class="rel-type">1:N · FK_Contactos_Usuarios</span></div>
-    <div class="rel-item">Usuarios <span class="arrow">→</span> Medicos <span class="rel-type">1:0-1 (UNIQUE) · FK_Medicos_Usuarios</span></div>
-    <div class="rel-item">Usuarios <span class="arrow">→</span> Pacientes <span class="rel-type">1:0-1 (UNIQUE) · FK_Pacientes_Usuarios</span></div>
-    <div class="rel-item">Usuarios <span class="arrow">→</span> AuditoriaLog <span class="rel-type">1:N · FK_Auditoria_Usuarios</span></div>
-    <div class="rel-item">Especialidades <span class="arrow">→</span> Medicos <span class="rel-type">1:N · FK_Medicos_Especialidades</span></div>
-    <div class="rel-item">TipoAsegurado <span class="arrow">→</span> Pacientes <span class="rel-type">1:N · FK_Pacientes_TipoAsegurado</span></div>
-    <div class="rel-item">Empresas <span class="arrow">→</span> Pacientes <span class="rel-type">1:N nullable · FK_Pacientes_Empresas</span></div>
-    <div class="rel-item">Medicos <span class="arrow">→</span> Citas <span class="rel-type">1:N · FK_Citas_Medicos</span></div>
-    <div class="rel-item">Pacientes <span class="arrow">→</span> Citas <span class="rel-type">1:N · FK_Citas_Pacientes</span></div>
-    <div class="rel-item">EstadosCita <span class="arrow">→</span> Citas <span class="rel-type">1:N · FK_Citas_EstadosCita</span></div>
-    <div class="rel-item">Medicos <span class="arrow">→</span> HorariosMedico <span class="rel-type">1:N · FK_Horarios_Medicos</span></div>
-    <div class="rel-item">Consultorios <span class="arrow">→</span> HorariosMedico <span class="rel-type">1:N nullable · FK_Horarios_Consultorios</span></div>
-    <div class="rel-item">Pacientes <span class="arrow">→</span> Seguros <span class="rel-type">1:N · FK_Seguros_Pacientes</span></div>
-    <div class="rel-item">Pacientes <span class="arrow">→</span> HistorialClinico <span class="rel-type">1:N · FK_Historial_Pacientes</span></div>
-    <div class="rel-item">Citas <span class="arrow">→</span> Recetas <span class="rel-type">1:0-1 (UNIQUE) · FK_Recetas_Citas</span></div>
-    <div class="rel-item">Citas <span class="arrow">→</span> Triaje <span class="rel-type">1:0-1 (UNIQUE) · FK_Triaje_Citas</span></div>
-    <div class="rel-item">Citas <span class="arrow">→</span> Facturas <span class="rel-type">1:0-1 (UNIQUE) · FK_Facturas_Citas</span></div>
-    <div class="rel-item">Citas <span class="arrow">→</span> HistorialClinico <span class="rel-type">1:N · FK_Historial_Citas</span></div>
-    <div class="rel-item">Citas <span class="arrow">→</span> CancelacionesCita <span class="rel-type">1:0-1 (UNIQUE) · FK_Cancelaciones_Citas</span></div>
-    <div class="rel-item">Recetas <span class="arrow">→</span> DetalleReceta <span class="rel-type">1:N · FK_DetalleReceta_Recetas</span></div>
-    <div class="rel-item">Medicamentos <span class="arrow">→</span> DetalleReceta <span class="rel-type">1:N · FK_DetalleReceta_Medicamentos</span></div>
-    <div class="rel-item">Facturas <span class="arrow">→</span> Pagos <span class="rel-type">1:N · FK_Pagos_Facturas</span></div>
-    <div class="rel-item">MetodosPago <span class="arrow">→</span> Pagos <span class="rel-type">1:N · FK_Pagos_MetodosPago</span></div>
+<div id="viewport">
+  <div id="canvas">
+    <svg id="svg-overlay"></svg>
+    <!-- Las tablas se generan por JavaScript -->
   </div>
 </div>
 
-<!-- SEED DATA -->
-<div class="seed-section">
-  <h2>🌱 Registros generados por SeedData.sql</h2>
-  <div class="seed-grid">
-    <div class="seed-card"><span class="seed-name">👤 Usuarios</span><span class="seed-count">100</span></div>
-    <div class="seed-card"><span class="seed-name">🩺 Médicos</span><span class="seed-count">28</span></div>
-    <div class="seed-card"><span class="seed-name">🏥 Pacientes</span><span class="seed-count">100</span></div>
-    <div class="seed-card"><span class="seed-name">🏢 Empresas</span><span class="seed-count">10</span></div>
-    <div class="seed-card"><span class="seed-name">📞 Contactos</span><span class="seed-count">200</span></div>
-    <div class="seed-card"><span class="seed-name">🕐 Horarios</span><span class="seed-count">140</span></div>
-    <div class="seed-card"><span class="seed-name">🛡️ Seguros</span><span class="seed-count">30</span></div>
-    <div class="seed-card"><span class="seed-name">📅 Citas</span><span class="seed-count">~952</span></div>
-    <div class="seed-card"><span class="seed-name">📁 Historial</span><span class="seed-count">~485</span></div>
-    <div class="seed-card"><span class="seed-name">📋 Recetas</span><span class="seed-count">~388</span></div>
-    <div class="seed-card"><span class="seed-name">💊 Det.Receta</span><span class="seed-count">~582</span></div>
-    <div class="seed-card"><span class="seed-name">🧾 Facturas</span><span class="seed-count">~485</span></div>
-    <div class="seed-card"><span class="seed-name">💳 Pagos</span><span class="seed-count">~404</span></div>
-    <div class="seed-card"><span class="seed-name">❌ Cancelaciones</span><span class="seed-count">~90</span></div>
-  </div>
-  <div style="margin-top:14px;padding:12px 16px;background:#F8FAFC;border-radius:10px;font-size:13px;color:#475569;line-height:1.8">
-    <strong>Usuarios:</strong> 2 Admins + 28 Médicos + 70 Pacientes · todos son también pacientes (100 registros en Pacientes)<br>
-    <strong>Pacientes por tipo:</strong> IDs 1–50 Particular · 51–65 Corporativo (con empresa) · 66–80 EsSalud · 81–100 SIS<br>
-    <strong>Citas pasadas (−180d a −30d):</strong> ~60% Completada · ~20% Cancelada · ~20% Anulada<br>
-    <strong>Citas recientes (−15d a −5d):</strong> ~67% Completada · ~33% Cancelada<br>
-    <strong>Citas futuras (+5d a +20d):</strong> Pendiente / Confirmada<br>
-    <strong>Médicos como pacientes (IDs 3–30):</strong> 4 citas c/u · ~67% Completada · ~33% Confirmada
-  </div>
+<div id="legend">
+  <h4>Grupos</h4>
+  <div class="leg-row"><div class="leg-dot" style="background:#7c3aed"></div> Identidad (Roles, Usuarios)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#0284c7"></div> Médicos (Medicos, Especialidades...)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#059669"></div> Pacientes (Pacientes, Empresas...)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#d97706"></div> Citas (Citas, EstadosCita...)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#dc2626"></div> Clínico / Financiero</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#6b7280"></div> Soporte (Contactos, Auditoría)</div>
+  <hr style="border-color:#333;margin:4px 0">
+  <h4>Columnas</h4>
+  <div class="leg-row"><span style="background:#fff8e1;padding:1px 4px;border-radius:2px;color:#333;font-size:9px">🔑</span> Primary Key</div>
+  <div class="leg-row"><span style="background:#e8f4fd;padding:1px 4px;border-radius:2px;color:#333;font-size:9px">🔗</span> Foreign Key</div>
+  <div class="leg-row"><span style="background:#f3e5f5;padding:1px 4px;border-radius:2px;color:#333;font-size:9px">🔑🔗</span> PK + FK</div>
 </div>
 
-<!-- VISTAS SQL -->
-<div class="rel-section">
-  <h2>👁️ Vistas SQL — 7 vistas creadas</h2>
-  <div class="rel-grid">
-    <div class="rel-item"><strong>Vista_Factura</strong><span class="rel-type">Factura completa: paciente, médico, empresa, especialidad, totales IGV</span></div>
-    <div class="rel-item"><strong>Vista_Medicamentos_Receta</strong><span class="rel-type">Medicamentos por receta con cálculo de subtotal por ítem</span></div>
-    <div class="rel-item"><strong>Vista_Contactos</strong><span class="rel-type">Teléfonos y emails de todos los usuarios con su rol</span></div>
-    <div class="rel-item"><strong>Vista_Citas</strong><span class="rel-type">Citas con nombre completo de paciente, médico, especialidad y estado</span></div>
-    <div class="rel-item"><strong>Vista_HistorialPaciente</strong><span class="rel-type">Historial clínico completo: diagnóstico, tratamiento y evolución</span></div>
-    <div class="rel-item"><strong>Vista_Pagos</strong><span class="rel-type">Pagos con detalle de factura, método de pago y paciente</span></div>
-    <div class="rel-item"><strong>Vista_HorariosMedicos</strong><span class="rel-type">Horarios activos por médico con día en español, hora y consultorio</span></div>
-  </div>
-</div>
+<script>
+// ════════════════════════════════════════════════
+//  DEFINICIÓN DE TABLAS
+// ════════════════════════════════════════════════
+const TABLES = {
+  // ── CATÁLOGOS ─────────────────────────────────
+  Roles: { x:20, y:30, color:'#7c3aed', cols:[
+    {n:'IdRol',        t:'INT',         pk:true},
+    {n:'NombreRol',    t:'VARCHAR(50)', nn:true},
+    {n:'Descripcion',  t:'VARCHAR(200)'},
+    {n:'Activo',       t:'BIT',         nn:true},
+    {n:'FechaCreacion',t:'DATETIME',    nn:true},
+  ]},
+  Especialidades: { x:250, y:30, color:'#0284c7', cols:[
+    {n:'IdEspecialidad',t:'INT',         pk:true},
+    {n:'Nombre',        t:'VARCHAR(100)',nn:true},
+    {n:'Descripcion',   t:'VARCHAR(300)'},
+    {n:'Activo',        t:'BIT',         nn:true},
+  ]},
+  TipoAsegurado: { x:480, y:30, color:'#059669', cols:[
+    {n:'IdTipo',  t:'INT',        pk:true},
+    {n:'Nombre',  t:'VARCHAR(50)',nn:true},
+  ]},
+  Empresas: { x:700, y:30, color:'#059669', cols:[
+    {n:'IdEmpresa',    t:'INT',          pk:true},
+    {n:'RazonSocial',  t:'VARCHAR(200)', nn:true},
+    {n:'RUC',          t:'VARCHAR(11)',  nn:true, uq:true},
+    {n:'Direccion',    t:'VARCHAR(200)'},
+    {n:'Telefono',     t:'VARCHAR(20)'},
+    {n:'Email',        t:'VARCHAR(150)'},
+    {n:'Activo',       t:'BIT',          nn:true},
+    {n:'FechaCreacion',t:'DATETIME',     nn:true},
+  ]},
+  EstadosCita: { x:930, y:30, color:'#d97706', cols:[
+    {n:'IdEstado',t:'INT',        pk:true},
+    {n:'Nombre',  t:'VARCHAR(50)',nn:true},
+  ]},
+  MetodosPago: { x:1150, y:30, color:'#dc2626', cols:[
+    {n:'IdMetodo',t:'INT',        pk:true},
+    {n:'Nombre',  t:'VARCHAR(50)',nn:true},
+  ]},
+  TipoConsulta: { x:1370, y:30, color:'#d97706', cols:[
+    {n:'IdTipoConsulta',t:'INT',          pk:true},
+    {n:'Nombre',         t:'VARCHAR(50)', nn:true},
+    {n:'Descripcion',    t:'VARCHAR(200)'},
+    {n:'TarifaExtra',    t:'DECIMAL(10,2)'},
+  ]},
+  Consultorios: { x:1600, y:30, color:'#0284c7', cols:[
+    {n:'IdConsultorio',t:'INT',        pk:true},
+    {n:'Nombre',       t:'VARCHAR(50)',nn:true},
+    {n:'Piso',         t:'VARCHAR(10)'},
+  ]},
 
-<p style="text-align:center;font-size:12px;color:#94A3B8;margin-top:8px;padding-bottom:16px">
-  ClinicaDB · SQL Server · .NET 8 ASP.NET Core · React 18 + Vite · IDAT 5to Ciclo · 2024
-</p>
+  // ── IDENTIDAD ─────────────────────────────────
+  Usuarios: { x:20, y:270, color:'#7c3aed', cols:[
+    {n:'IdUsuario',        t:'INT',          pk:true},
+    {n:'IdRol',            t:'INT',          fk:true, ref:'Roles.IdRol', nn:true},
+    {n:'Nombres',          t:'VARCHAR(100)', nn:true},
+    {n:'Apellidos',        t:'VARCHAR(100)', nn:true},
+    {n:'DNI',              t:'VARCHAR(8)',   nn:true, uq:true},
+    {n:'FechaNacimiento',  t:'DATE'},
+    {n:'Genero',           t:'CHAR(1)'},
+    {n:'Direccion',        t:'VARCHAR(200)'},
+    {n:'Username',         t:'VARCHAR(50)',  nn:true, uq:true},
+    {n:'PasswordHash',     t:'VARCHAR(256)', nn:true},
+    {n:'Activo',           t:'BIT',          nn:true},
+    {n:'FechaCreacion',    t:'DATETIME',     nn:true},
+    {n:'FechaModificacion',t:'DATETIME'},
+  ]},
 
-<script>mermaid.initialize({ startOnLoad: true, er: { diagramPadding: 20, layoutDirection: 'TB', minEntityWidth: 100 } });</script>
+  // ── MÉDICOS ───────────────────────────────────
+  Medicos: { x:250, y:270, color:'#0284c7', cols:[
+    {n:'IdMedico',      t:'INT',          pk:true},
+    {n:'IdUsuario',     t:'INT',          fk:true, ref:'Usuarios.IdUsuario', nn:true, uq:true},
+    {n:'IdEspecialidad',t:'INT',          fk:true, ref:'Especialidades.IdEspecialidad', nn:true},
+    {n:'ColegioMedico', t:'VARCHAR(20)',  nn:true, uq:true},
+    {n:'Consultorio',   t:'VARCHAR(50)'},
+    {n:'TarifaConsulta',t:'DECIMAL(10,2)'},
+    {n:'FechaCreacion', t:'DATETIME',     nn:true},
+  ]},
+
+  // ── PACIENTES ─────────────────────────────────
+  Pacientes: { x:480, y:270, color:'#059669', cols:[
+    {n:'IdPaciente',      t:'INT',         pk:true},
+    {n:'IdUsuario',       t:'INT',         fk:true, ref:'Usuarios.IdUsuario', nn:true, uq:true},
+    {n:'IdTipoAsegurado', t:'INT',         fk:true, ref:'TipoAsegurado.IdTipo', nn:true},
+    {n:'IdEmpresa',       t:'INT',         fk:true, ref:'Empresas.IdEmpresa'},
+    {n:'NumeroSeguro',    t:'VARCHAR(50)'},
+    {n:'GrupoSanguineo',  t:'VARCHAR(5)'},
+    {n:'Alergias',        t:'VARCHAR(500)'},
+    {n:'FechaCreacion',   t:'DATETIME',    nn:true},
+  ]},
+
+  // ── CITAS ─────────────────────────────────────
+  Citas: { x:710, y:270, color:'#d97706', cols:[
+    {n:'IdCita',           t:'INT',          pk:true},
+    {n:'IdPaciente',       t:'INT',          fk:true, ref:'Pacientes.IdPaciente', nn:true},
+    {n:'IdMedico',         t:'INT',          fk:true, ref:'Medicos.IdMedico', nn:true},
+    {n:'IdEstado',         t:'INT',          fk:true, ref:'EstadosCita.IdEstado', nn:true},
+    {n:'FechaHora',        t:'DATETIME',     nn:true},
+    {n:'Motivo',           t:'VARCHAR(300)', nn:true},
+    {n:'Observaciones',    t:'VARCHAR(500)'},
+    {n:'FechaCreacion',    t:'DATETIME',     nn:true},
+    {n:'FechaModificacion',t:'DATETIME'},
+  ]},
+
+  CancelacionesCita: { x:940, y:270, color:'#d97706', cols:[
+    {n:'IdCancelacion',   t:'INT',          pk:true},
+    {n:'IdCita',          t:'INT',          fk:true, ref:'Citas.IdCita', nn:true},
+    {n:'Motivo',          t:'VARCHAR(300)'},
+    {n:'CanceladoPor',    t:'VARCHAR(50)'},
+    {n:'FechaCancelacion',t:'DATETIME',     nn:true},
+  ]},
+
+  AuditoriaLog: { x:1170, y:270, color:'#6b7280', cols:[
+    {n:'IdAuditoria', t:'INT',          pk:true},
+    {n:'Tabla',       t:'VARCHAR(100)', nn:true},
+    {n:'Accion',      t:'VARCHAR(20)',  nn:true},
+    {n:'IdRegistro',  t:'INT'},
+    {n:'Descripcion', t:'VARCHAR(500)'},
+    {n:'IdUsuario',   t:'INT',          fk:true, ref:'Usuarios.IdUsuario'},
+    {n:'FechaHora',   t:'DATETIME',     nn:true},
+  ]},
+
+  // ── SEGUNDA FILA ──────────────────────────────
+  Contactos: { x:20, y:640, color:'#6b7280', cols:[
+    {n:'IdContacto',   t:'INT',          pk:true},
+    {n:'IdUsuario',    t:'INT',          fk:true, ref:'Usuarios.IdUsuario', nn:true},
+    {n:'TipoContacto', t:'VARCHAR(20)',  nn:true},
+    {n:'Valor',        t:'VARCHAR(150)', nn:true},
+    {n:'EsPrincipal',  t:'BIT',          nn:true},
+    {n:'FechaCreacion',t:'DATETIME',     nn:true},
+  ]},
+
+  HorariosMedico: { x:250, y:640, color:'#0284c7', cols:[
+    {n:'IdHorario',    t:'INT',     pk:true},
+    {n:'IdMedico',     t:'INT',     fk:true, ref:'Medicos.IdMedico', nn:true},
+    {n:'DiaSemana',    t:'INT',     nn:true},
+    {n:'HoraInicio',   t:'TIME',    nn:true},
+    {n:'HoraFin',      t:'TIME',    nn:true},
+    {n:'IdConsultorio',t:'INT',     fk:true, ref:'Consultorios.IdConsultorio'},
+    {n:'Activo',       t:'BIT',     nn:true},
+  ]},
+
+  Seguros: { x:480, y:640, color:'#059669', cols:[
+    {n:'IdSeguro',     t:'INT',           pk:true},
+    {n:'IdPaciente',   t:'INT',           fk:true, ref:'Pacientes.IdPaciente', nn:true},
+    {n:'NombreSeguro', t:'VARCHAR(100)',   nn:true},
+    {n:'NumeroPoliza', t:'VARCHAR(50)'},
+    {n:'FechaVigencia',t:'DATE'},
+    {n:'CoberturaMax', t:'DECIMAL(10,2)'},
+  ]},
+
+  Facturas: { x:710, y:640, color:'#dc2626', cols:[
+    {n:'IdFactura',     t:'INT',          pk:true},
+    {n:'IdCita',        t:'INT',          fk:true, ref:'Citas.IdCita', nn:true, uq:true},
+    {n:'NumeroFactura', t:'VARCHAR(20)',   nn:true, uq:true},
+    {n:'Serie',         t:'VARCHAR(5)',    nn:true},
+    {n:'Subtotal',      t:'DECIMAL(10,2)',nn:true},
+    {n:'IGV',           t:'DECIMAL(10,2)',nn:true},
+    {n:'Total',         t:'DECIMAL(10,2)',nn:true},
+    {n:'EstadoPago',    t:'VARCHAR(20)',   nn:true},
+    {n:'FechaEmision',  t:'DATETIME',     nn:true},
+  ]},
+
+  Pagos: { x:940, y:640, color:'#dc2626', cols:[
+    {n:'IdPago',      t:'INT',           pk:true},
+    {n:'IdFactura',   t:'INT',           fk:true, ref:'Facturas.IdFactura', nn:true},
+    {n:'IdMetodo',    t:'INT',           fk:true, ref:'MetodosPago.IdMetodo', nn:true},
+    {n:'Monto',       t:'DECIMAL(10,2)', nn:true},
+    {n:'NroOperacion',t:'VARCHAR(50)'},
+    {n:'FechaPago',   t:'DATETIME',      nn:true},
+  ]},
+
+  // ── CLÍNICO ───────────────────────────────────
+  HistorialClinico: { x:20, y:960, color:'#dc2626', cols:[
+    {n:'IdHistorial',  t:'INT',          pk:true},
+    {n:'IdPaciente',   t:'INT',          fk:true, ref:'Pacientes.IdPaciente', nn:true},
+    {n:'IdCita',       t:'INT',          fk:true, ref:'Citas.IdCita'},
+    {n:'Diagnostico',  t:'VARCHAR(500)'},
+    {n:'Tratamiento',  t:'VARCHAR(500)'},
+    {n:'Evolucion',    t:'VARCHAR(500)'},
+    {n:'FechaRegistro',t:'DATETIME',     nn:true},
+  ]},
+
+  Triaje: { x:250, y:960, color:'#dc2626', cols:[
+    {n:'IdTriaje',           t:'INT',          pk:true},
+    {n:'IdCita',             t:'INT',          fk:true, ref:'Citas.IdCita', nn:true, uq:true},
+    {n:'Peso',               t:'DECIMAL(5,2)'},
+    {n:'Talla',              t:'DECIMAL(5,2)'},
+    {n:'PresionSistolica',   t:'INT'},
+    {n:'PresionDiastolica',  t:'INT'},
+    {n:'FrecuenciaCardiaca', t:'INT'},
+    {n:'Temperatura',        t:'DECIMAL(4,1)'},
+    {n:'Saturacion',         t:'DECIMAL(4,1)'},
+    {n:'FechaRegistro',      t:'DATETIME',     nn:true},
+  ]},
+
+  Recetas: { x:480, y:960, color:'#dc2626', cols:[
+    {n:'IdReceta',    t:'INT',          pk:true},
+    {n:'IdCita',      t:'INT',          fk:true, ref:'Citas.IdCita', nn:true, uq:true},
+    {n:'Diagnostico', t:'VARCHAR(500)'},
+    {n:'Indicaciones',t:'VARCHAR(500)'},
+    {n:'FechaEmision',t:'DATETIME',     nn:true},
+  ]},
+
+  DetalleReceta: { x:710, y:960, color:'#dc2626', cols:[
+    {n:'IdDetalle',    t:'INT',          pk:true},
+    {n:'IdReceta',     t:'INT',          fk:true, ref:'Recetas.IdReceta', nn:true},
+    {n:'IdMedicamento',t:'INT',          fk:true, ref:'Medicamentos.IdMedicamento', nn:true},
+    {n:'Dosis',        t:'VARCHAR(100)'},
+    {n:'Frecuencia',   t:'VARCHAR(100)'},
+    {n:'Duracion',     t:'VARCHAR(50)'},
+    {n:'Cantidad',     t:'INT',          nn:true},
+  ]},
+
+  Medicamentos: { x:940, y:960, color:'#dc2626', cols:[
+    {n:'IdMedicamento',t:'INT',           pk:true},
+    {n:'Nombre',       t:'VARCHAR(200)',  nn:true},
+    {n:'Presentacion', t:'VARCHAR(100)'},
+    {n:'Concentracion',t:'VARCHAR(50)'},
+    {n:'Laboratorio',  t:'VARCHAR(100)'},
+    {n:'Precio',       t:'DECIMAL(10,2)',nn:true},
+    {n:'Stock',        t:'INT',           nn:true},
+    {n:'Activo',       t:'BIT',           nn:true},
+    {n:'FechaCreacion',t:'DATETIME',      nn:true},
+  ]},
+};
+
+// ════════════════════════════════════════════════
+//  RELACIONES (FK → PK)
+// ════════════════════════════════════════════════
+const RELS = [
+  // Identidad
+  {from:'Usuarios',         fc:'IdRol',            to:'Roles',        tc:'IdRol'},
+  {from:'Contactos',        fc:'IdUsuario',         to:'Usuarios',     tc:'IdUsuario'},
+  {from:'AuditoriaLog',     fc:'IdUsuario',         to:'Usuarios',     tc:'IdUsuario'},
+  // Médicos
+  {from:'Medicos',          fc:'IdUsuario',         to:'Usuarios',     tc:'IdUsuario'},
+  {from:'Medicos',          fc:'IdEspecialidad',    to:'Especialidades',tc:'IdEspecialidad'},
+  {from:'HorariosMedico',   fc:'IdMedico',          to:'Medicos',      tc:'IdMedico'},
+  {from:'HorariosMedico',   fc:'IdConsultorio',     to:'Consultorios', tc:'IdConsultorio'},
+  // Pacientes
+  {from:'Pacientes',        fc:'IdUsuario',         to:'Usuarios',     tc:'IdUsuario'},
+  {from:'Pacientes',        fc:'IdTipoAsegurado',   to:'TipoAsegurado',tc:'IdTipo'},
+  {from:'Pacientes',        fc:'IdEmpresa',         to:'Empresas',     tc:'IdEmpresa'},
+  {from:'Seguros',          fc:'IdPaciente',        to:'Pacientes',    tc:'IdPaciente'},
+  // Citas
+  {from:'Citas',            fc:'IdPaciente',        to:'Pacientes',    tc:'IdPaciente'},
+  {from:'Citas',            fc:'IdMedico',          to:'Medicos',      tc:'IdMedico'},
+  {from:'Citas',            fc:'IdEstado',          to:'EstadosCita',  tc:'IdEstado'},
+  {from:'CancelacionesCita',fc:'IdCita',            to:'Citas',        tc:'IdCita'},
+  // Clínico
+  {from:'Triaje',           fc:'IdCita',            to:'Citas',        tc:'IdCita'},
+  {from:'Recetas',          fc:'IdCita',            to:'Citas',        tc:'IdCita'},
+  {from:'HistorialClinico', fc:'IdPaciente',        to:'Pacientes',    tc:'IdPaciente'},
+  {from:'HistorialClinico', fc:'IdCita',            to:'Citas',        tc:'IdCita'},
+  {from:'DetalleReceta',    fc:'IdReceta',          to:'Recetas',      tc:'IdReceta'},
+  {from:'DetalleReceta',    fc:'IdMedicamento',     to:'Medicamentos', tc:'IdMedicamento'},
+  // Financiero
+  {from:'Facturas',         fc:'IdCita',            to:'Citas',        tc:'IdCita'},
+  {from:'Pagos',            fc:'IdFactura',         to:'Facturas',     tc:'IdFactura'},
+  {from:'Pagos',            fc:'IdMetodo',          to:'MetodosPago',  tc:'IdMetodo'},
+];
+
+// ════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════
+const HDR = 26, ROW = 20, W = 210;
+
+function tableHeight(tbl) { return HDR + tbl.cols.length * ROW; }
+
+function rowY(tbl, colName) {
+  const idx = tbl.cols.findIndex(c => c.n === colName);
+  return tbl.y + HDR + idx * ROW + ROW / 2;
+}
+
+function buildTables() {
+  const canvas = document.getElementById('canvas');
+  Object.entries(TABLES).forEach(([name, tbl]) => {
+    const div = document.createElement('div');
+    div.className = 'dbt';
+    div.id = 'tbl-' + name;
+    div.style.left = tbl.x + 'px';
+    div.style.top  = tbl.y + 'px';
+    div.title = name;
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'dbt-hdr';
+    hdr.style.background = tbl.color;
+    hdr.innerHTML = `<span class="tbl-icon">▦</span><span>${name}</span>`;
+    div.appendChild(hdr);
+
+    // Columns
+    const cols = document.createElement('div');
+    cols.className = 'dbt-cols';
+    tbl.cols.forEach(col => {
+      const row = document.createElement('div');
+      const cls = (col.pk && col.fk) ? 'dbt-row pk fk' : col.pk ? 'dbt-row pk' : col.fk ? 'dbt-row fk' : 'dbt-row';
+      row.className = cls;
+      row.id = `col-${name}-${col.n}`;
+
+      const icon = col.pk && col.fk ? '🔑🔗' : col.pk ? '🔑' : col.fk ? '🔗' : '';
+      const tags = [
+        col.pk ? '<span class="col-tag tag-pk">PK</span>' : '',
+        col.fk ? '<span class="col-tag tag-fk">FK</span>' : '',
+        col.uq ? '<span class="col-tag tag-uq">UQ</span>' : '',
+        col.nn && !col.pk ? '<span class="col-tag tag-nn">NN</span>' : '',
+      ].join('');
+
+      row.innerHTML = `
+        <span class="col-icon">${icon}</span>
+        <span class="col-name ${col.pk ? 'pk-name' : ''}" title="${col.n}">${col.n}</span>
+        <span class="col-type">${col.t}</span>
+        ${tags}
+      `;
+      cols.appendChild(row);
+    });
+    div.appendChild(cols);
+
+    // Make draggable
+    makeDraggable(div, name, tbl);
+    canvas.appendChild(div);
+  });
+}
+
+// ════════════════════════════════════════════════
+//  SVG LINES
+// ════════════════════════════════════════════════
+function drawLines() {
+  const svg = document.getElementById('svg-overlay');
+  svg.innerHTML = '';
+  // Defs for markers
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#888"/>
+      </marker>
+      <marker id="arrow-one" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto">
+        <line x1="2" y1="0" x2="2" y2="6" stroke="#888" stroke-width="1.5"/>
+      </marker>
+    </defs>
+  `;
+
+  RELS.forEach(rel => {
+    const fromTbl = TABLES[rel.from];
+    const toTbl   = TABLES[rel.to];
+    if (!fromTbl || !toTbl) return;
+
+    const fromDiv = document.getElementById('tbl-' + rel.from);
+    const toDiv   = document.getElementById('tbl-' + rel.to);
+    if (!fromDiv || !toDiv) return;
+
+    const fx = parseInt(fromDiv.style.left);
+    const fy = parseInt(fromDiv.style.top);
+    const tx = parseInt(toDiv.style.left);
+    const ty = parseInt(toDiv.style.top);
+
+    // Y of the FK column in the source table
+    const fromCols = Object.assign({}, fromTbl, {x: fx, y: fy});
+    const toCols   = Object.assign({}, toTbl,   {x: tx, y: ty});
+
+    const fy_col = rowY(fromCols, rel.fc);
+    const ty_col = rowY(toCols,   rel.tc);
+
+    // Determine connection sides
+    const fromCenterX = fx + W / 2;
+    const toCenterX   = tx + W / 2;
+    let x1, x2, cx1, cx2;
+
+    if (fromCenterX <= toCenterX) {
+      x1 = fx + W;   // right of source
+      x2 = tx;       // left of target
+      const gap = Math.max(40, Math.abs(x2 - x1) * 0.4);
+      cx1 = x1 + gap;
+      cx2 = x2 - gap;
+    } else {
+      x1 = fx;       // left of source
+      x2 = tx + W;   // right of target
+      const gap = Math.max(40, Math.abs(x1 - x2) * 0.4);
+      cx1 = x1 - gap;
+      cx2 = x2 + gap;
+    }
+
+    const color = fromTbl.color;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M${x1},${fy_col} C${cx1},${fy_col} ${cx2},${ty_col} ${x2},${ty_col}`);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.7');
+    path.setAttribute('marker-end', 'url(#arrow-end)');
+
+    // "1" on the PK (target) side
+    const text1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text1.setAttribute('x', x2 + (fromCenterX <= toCenterX ? -14 : 8));
+    text1.setAttribute('y', ty_col - 3);
+    text1.setAttribute('fill', color);
+    text1.setAttribute('font-size', '10');
+    text1.setAttribute('font-weight', '700');
+    text1.textContent = '1';
+
+    // "N" on the FK (source) side
+    const textN = document.createElementNS('http://www.w3.org/2000/svg','text');
+    textN.setAttribute('x', x1 + (fromCenterX <= toCenterX ? 4 : -12));
+    textN.setAttribute('y', fy_col - 3);
+    textN.setAttribute('fill', color);
+    textN.setAttribute('font-size', '10');
+    textN.setAttribute('font-weight', '700');
+    textN.textContent = 'N';
+
+    // Tooltip on path
+    const title = document.createElementNS('http://www.w3.org/2000/svg','title');
+    title.textContent = `${rel.from}.${rel.fc} → ${rel.to}.${rel.tc}`;
+    path.appendChild(title);
+
+    svg.appendChild(path);
+    svg.appendChild(text1);
+    svg.appendChild(textN);
+  });
+}
+
+// ════════════════════════════════════════════════
+//  DRAG & DROP TABLAS
+// ════════════════════════════════════════════════
+function makeDraggable(el, name, tblData) {
+  let startX, startY, startLeft, startTop;
+
+  el.addEventListener('mousedown', e => {
+    if (e.ctrlKey) return; // ctrl+drag = pan
+    e.stopPropagation();
+    startX    = e.clientX;
+    startY    = e.clientY;
+    startLeft = parseInt(el.style.left) || tblData.x;
+    startTop  = parseInt(el.style.top)  || tblData.y;
+
+    function onMove(e) {
+      const scale = currentScale;
+      const nx = startLeft + (e.clientX - startX) / scale;
+      const ny = startTop  + (e.clientY - startY) / scale;
+      el.style.left = nx + 'px';
+      el.style.top  = ny + 'px';
+      TABLES[name].x = nx;
+      TABLES[name].y = ny;
+      drawLines();
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  el.addEventListener('click', () => highlightTable(name));
+}
+
+// ════════════════════════════════════════════════
+//  PAN & ZOOM
+// ════════════════════════════════════════════════
+const vp = document.getElementById('viewport');
+let tx = 0, ty = 0, currentScale = 0.72;
+let panStart = null;
+
+function applyTransform() {
+  document.getElementById('canvas').style.transform =
+    `translate(${tx}px,${ty}px) scale(${currentScale})`;
+  document.getElementById('canvas').style.transformOrigin = '0 0';
+}
+
+vp.addEventListener('mousedown', e => {
+  if (!e.ctrlKey && e.target !== vp && e.target !== document.getElementById('canvas') &&
+      e.target !== document.getElementById('svg-overlay') &&
+      !e.target.closest && !e.target.classList.contains('dbt-hdr')) return;
+  if (e.ctrlKey || e.target === vp || e.target.id === 'canvas') {
+    vp.classList.add('panning');
+    panStart = {x: e.clientX - tx, y: e.clientY - ty};
+    function onMove(e) {
+      tx = e.clientX - panStart.x;
+      ty = e.clientY - panStart.y;
+      applyTransform();
+    }
+    function onUp() {
+      vp.classList.remove('panning');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+});
+
+vp.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const rect = vp.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  tx = mouseX - (mouseX - tx) * delta;
+  ty = mouseY - (mouseY - ty) * delta;
+  currentScale *= delta;
+  currentScale  = Math.min(Math.max(currentScale, 0.2), 3);
+  applyTransform();
+}, {passive: false});
+
+function zoom(factor) {
+  currentScale *= factor;
+  currentScale = Math.min(Math.max(currentScale, 0.2), 3);
+  applyTransform();
+}
+
+function resetView() {
+  tx = 0; ty = 0; currentScale = 0.72;
+  applyTransform();
+}
+
+function fitAll() {
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  Object.values(TABLES).forEach(t => {
+    minX = Math.min(minX, t.x);
+    minY = Math.min(minY, t.y);
+    maxX = Math.max(maxX, t.x + W);
+    maxY = Math.max(maxY, t.y + tableHeight(t));
+  });
+  const vpW = vp.clientWidth - 40;
+  const vpH = vp.clientHeight - 40;
+  const scaleX = vpW / (maxX - minX);
+  const scaleY = vpH / (maxY - minY);
+  currentScale = Math.min(scaleX, scaleY, 1);
+  tx = 20 - minX * currentScale;
+  ty = 20 - minY * currentScale;
+  applyTransform();
+}
+
+// ════════════════════════════════════════════════
+//  HIGHLIGHT TABLE
+// ════════════════════════════════════════════════
+let lastHighlight = null;
+function highlightTable(name) {
+  if (lastHighlight === name) {
+    document.querySelectorAll('.dbt').forEach(d => d.classList.remove('highlighted'));
+    lastHighlight = null;
+    drawLines();
+    return;
+  }
+  lastHighlight = name;
+  document.querySelectorAll('.dbt').forEach(d => d.classList.remove('highlighted'));
+  document.getElementById('tbl-' + name)?.classList.add('highlighted');
+
+  const related = new Set([name]);
+  RELS.forEach(r => {
+    if (r.from === name) related.add(r.to);
+    if (r.to   === name) related.add(r.from);
+  });
+  related.forEach(n => document.getElementById('tbl-' + n)?.classList.add('highlighted'));
+
+  // Dim non-related lines
+  drawLinesFiltered(name);
+}
+
+function drawLinesFiltered(activeName) {
+  const svg = document.getElementById('svg-overlay');
+  svg.innerHTML = `<defs>
+    <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#888"/>
+    </marker>
+  </defs>`;
+
+  RELS.forEach(rel => {
+    const active = (rel.from === activeName || rel.to === activeName);
+    const fromTbl = TABLES[rel.from];
+    const toTbl   = TABLES[rel.to];
+    if (!fromTbl || !toTbl) return;
+
+    const fromDiv = document.getElementById('tbl-' + rel.from);
+    const toDiv   = document.getElementById('tbl-' + rel.to);
+    if (!fromDiv || !toDiv) return;
+
+    const fx = parseInt(fromDiv.style.left);
+    const fy = parseInt(fromDiv.style.top);
+    const tx2 = parseInt(toDiv.style.left);
+    const ty2 = parseInt(toDiv.style.top);
+
+    const fromCols = {...fromTbl, x:fx, y:fy};
+    const toCols   = {...toTbl,   x:tx2, y:ty2};
+    const fy_col = rowY(fromCols, rel.fc);
+    const ty_col = rowY(toCols,   rel.tc);
+
+    const fromCenterX = fx + W/2;
+    const toCenterX   = tx2 + W/2;
+    let x1, x2, cx1, cx2;
+
+    if (fromCenterX <= toCenterX) {
+      x1=fx+W; x2=tx2;
+      const gap = Math.max(40, Math.abs(x2-x1)*0.4);
+      cx1=x1+gap; cx2=x2-gap;
+    } else {
+      x1=fx; x2=tx2+W;
+      const gap = Math.max(40, Math.abs(x1-x2)*0.4);
+      cx1=x1-gap; cx2=x2+gap;
+    }
+
+    const color = active ? fromTbl.color : '#444';
+    const opacity = active ? '0.9' : '0.2';
+    const sw = active ? '2' : '1';
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${fy_col} C${cx1},${fy_col} ${cx2},${ty_col} ${x2},${ty_col}`);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', sw);
+    path.setAttribute('fill','none');
+    path.setAttribute('opacity', opacity);
+    if (active) path.setAttribute('marker-end','url(#arrow-end)');
+    svg.appendChild(path);
+
+    if (active) {
+      ['1','N'].forEach((lbl, i) => {
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        const isOne = i === 0;
+        t.setAttribute('x', isOne ? (x2+(fromCenterX<=toCenterX?-14:8)) : (x1+(fromCenterX<=toCenterX?4:-12)));
+        t.setAttribute('y', isOne ? ty_col-3 : fy_col-3);
+        t.setAttribute('fill', color);
+        t.setAttribute('font-size','11');
+        t.setAttribute('font-weight','700');
+        t.textContent = lbl;
+        svg.appendChild(t);
+      });
+    }
+  });
+}
+
+// ════════════════════════════════════════════════
+//  SEARCH
+// ════════════════════════════════════════════════
+function searchTable(val) {
+  const q = val.trim().toLowerCase();
+  if (!q) {
+    document.querySelectorAll('.dbt').forEach(d => d.style.outline = '');
+    return;
+  }
+  Object.keys(TABLES).forEach(name => {
+    const el = document.getElementById('tbl-' + name);
+    if (!el) return;
+    if (name.toLowerCase().includes(q)) {
+      el.style.outline = '3px solid #f59e0b';
+      // scroll to it
+      const tbl = TABLES[name];
+      tx = vp.clientWidth/2 - tbl.x * currentScale - W*currentScale/2;
+      ty = vp.clientHeight/2 - tbl.y * currentScale - 80*currentScale;
+      applyTransform();
+    } else {
+      el.style.outline = '';
+    }
+  });
+}
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+buildTables();
+drawLines();
+applyTransform();
+</script>
 </body>
 </html>

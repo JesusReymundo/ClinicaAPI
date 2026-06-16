@@ -489,3 +489,213 @@ tbody tr:last-child td { border-bottom: none; }
 .items-center { align-items: center; }
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
+
+/* ═══════════════════════════════════════
+   ALERTAS ADICIONALES
+═══════════════════════════════════════ */
+.alert-success { background: #F0FDF4; color: #166534; border: 1px solid #86EFAC; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
+.alert-warning { background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; }
+.info-box { background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #1E40AF; }
+.info-box a { color: #2563EB; font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   DEMO ACCORDION (Login)
+═══════════════════════════════════════ */
+.demo-accordion { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.demo-acc-item { border: 1.5px solid #E2E8F0; border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+.demo-acc-item.open { border-color: var(--acc-color, #6B21A8); }
+
+.demo-acc-header {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px 14px; background: white; border: none; cursor: pointer;
+  text-align: left; transition: background 0.15s;
+}
+.demo-acc-header:hover { background: #fafafa; }
+.demo-acc-item.open .demo-acc-header { background: #faf5ff; }
+
+.demo-acc-icon {
+  width: 36px; height: 36px; border-radius: 10px; font-size: 18px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.demo-acc-info { display: flex; flex-direction: column; flex: 1; }
+.demo-acc-label   { font-size: 13px; font-weight: 700; color: #1e293b; }
+.demo-acc-subdesc { font-size: 11px; color: #94A3B8; margin-top: 1px; }
+.demo-acc-chevron { font-size: 10px; transition: transform 0.2s; }
+
+.demo-acc-body {
+  padding: 12px 16px 14px; background: #fafafa;
+  border-top: 1px solid #f1f5f9;
+}
+.demo-cred-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.demo-cred-label { font-size: 12px; color: #64748b; min-width: 80px; }
+.demo-cred-val {
+  font-size: 12px; background: #f1f5f9; color: #1e1b4b;
+  padding: 2px 8px; border-radius: 6px; font-family: monospace;
+}
+.demo-acc-hint { font-size: 11px; color: #059669; margin-top: 8px; font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   STEPPER (SolicitarCita)
+═══════════════════════════════════════ */
+.stepper { display: flex; justify-content: center; gap: 0; margin-bottom: 24px; }
+.step-item { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; max-width: 160px; }
+.step-item:not(:last-child)::after {
+  content: ''; position: absolute; top: 16px; left: 60%; width: 80%; height: 2px;
+  background: #E2E8F0;
+}
+.step-item.done::after, .step-item.active::after { background: #6B21A8; }
+.step-circle {
+  width: 32px; height: 32px; border-radius: 50%; border: 2px solid #E2E8F0;
+  background: white; color: #94A3B8; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; z-index: 1;
+}
+.step-item.active .step-circle { border-color: #6B21A8; background: #6B21A8; color: white; }
+.step-item.done .step-circle   { border-color: #059669; background: #059669; color: white; }
+.step-label { font-size: 11px; color: #94A3B8; margin-top: 6px; text-align: center; }
+.step-item.active .step-label { color: #6B21A8; font-weight: 600; }
+.step-item.done .step-label   { color: #059669; }
+
+.solicitar-card { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.step-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+.step-sub   { color: #64748B; font-size: 14px; margin-bottom: 20px; }
+.step-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; border-top: 1px solid #F1F5F9; padding-top: 16px; }
+
+.especialidad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.esp-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 20px 12px; border: 2px solid #E2E8F0; border-radius: 12px;
+  background: white; font-size: 14px; font-weight: 500; color: #374151;
+  transition: all 0.15s;
+}
+.esp-card:hover   { border-color: #6B21A8; background: #FAF5FF; }
+.esp-card.selected { border-color: #6B21A8; background: #F3E8FF; color: #6B21A8; }
+.esp-icon { font-size: 28px; }
+.esp-card small { font-size: 11px; color: #94A3B8; }
+
+.fecha-hora-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+.horas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+.hora-btn {
+  padding: 8px 4px; border: 2px solid #E2E8F0; border-radius: 8px;
+  background: white; font-size: 13px; font-weight: 600; color: #374151; transition: all 0.15s;
+}
+.hora-btn:hover   { border-color: #6B21A8; color: #6B21A8; }
+.hora-btn.selected { border-color: #6B21A8; background: #6B21A8; color: white; }
+
+.medicos-disponibles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.medico-card {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border: 2px solid #E2E8F0; border-radius: 10px; background: white;
+  text-align: left; position: relative; transition: all 0.15s;
+}
+.medico-card:hover   { border-color: #0284C7; background: #F0F9FF; }
+.medico-card.selected { border-color: #0284C7; background: #EFF6FF; }
+.medico-avatar {
+  width: 44px; height: 44px; border-radius: 50%; background: #0284C7;
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; flex-shrink: 0;
+}
+.medico-nombre { font-weight: 600; font-size: 15px; color: #1e293b; }
+.medico-esp    { font-size: 12px; color: #6B21A8; font-weight: 500; }
+.medico-consul { font-size: 12px; color: #64748B; }
+.medico-tarifa { font-size: 13px; font-weight: 600; color: #059669; }
+.check-mark { position: absolute; right: 14px; font-size: 20px; color: #0284C7; font-weight: 700; }
+
+.confirm-card {
+  background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 20px; margin-bottom: 8px;
+}
+.confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 14px; }
+.confirm-row:last-child { border-bottom: none; }
+.confirm-row span { color: #64748B; }
+
+.motivos-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.motivo-btn {
+  padding: 6px 14px; border: 2px solid #E2E8F0; border-radius: 20px;
+  background: white; font-size: 13px; color: #374151; transition: all 0.15s;
+}
+.motivo-btn:hover   { border-color: #6B21A8; color: #6B21A8; }
+.motivo-btn.selected { border-color: #6B21A8; background: #6B21A8; color: white; }
+
+.solicitar-success {
+  text-align: center; padding: 60px 20px; background: white;
+  border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.success-icon { font-size: 64px; margin-bottom: 16px; }
+.solicitar-success h2 { font-size: 24px; color: #059669; margin-bottom: 12px; }
+.solicitar-success p  { color: #64748B; font-size: 15px; }
+
+/* ═══════════════════════════════════════
+   STATS ROW (Boletas / GestionTickets)
+═══════════════════════════════════════ */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.stat-card-mini {
+  background: white; border-radius: 10px; padding: 14px 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06); text-align: center; min-width: 110px;
+}
+.stat-mini-val   { font-size: 22px; font-weight: 800; color: #1e293b; }
+.stat-mini-label { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+
+/* ═══════════════════════════════════════
+   BOLETA MODAL
+═══════════════════════════════════════ */
+.boleta-modal { max-width: 480px; }
+.boleta-header { text-align: center; padding: 20px 0 10px; border-bottom: 2px dashed #E2E8F0; }
+.boleta-logo   { font-size: 20px; font-weight: 700; color: #6B21A8; }
+.boleta-tipo   { font-size: 12px; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.boleta-num    { font-size: 16px; font-weight: 700; color: #1e293b; margin-top: 4px; }
+.boleta-body   { padding: 16px 0; }
+.boleta-row    { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.boleta-total  { font-size: 16px; font-weight: 700; border-top: 2px solid #1e293b; margin-top: 8px; padding-top: 10px; }
+.boleta-estado { text-align: center; margin-top: 12px; font-weight: 600; font-size: 14px; }
+
+/* ═══════════════════════════════════════
+   TICKETS
+═══════════════════════════════════════ */
+.tickets-list { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.ticket-item {
+  background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;
+  padding: 14px 16px; transition: box-shadow 0.15s;
+}
+.ticket-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.ticket-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.ticket-id  { font-size: 12px; font-weight: 700; color: #94A3B8; font-family: monospace; }
+.ticket-cat { font-weight: 600; font-size: 14px; color: #1e293b; flex: 1; }
+.ticket-fecha { margin-left: auto; white-space: nowrap; }
+.ticket-desc { font-size: 14px; color: #374151; line-height: 1.5; }
+.ticket-respuesta {
+  margin-top: 10px; background: #F0FDF4; border: 1px solid #86EFAC;
+  border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #166534;
+}
+.ticket-respuesta strong { display: block; margin-bottom: 4px; font-size: 12px; }
+
+/* ═══════════════════════════════════════
+   BOLETA TITULAR CARD
+═══════════════════════════════════════ */
+.boleta-titular-card {
+  background: linear-gradient(135deg, #f8f4ff 0%, #ede9fe 100%);
+  border: 1px solid #DDD6FE; border-radius: 14px;
+  padding: 18px 22px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.titular-info { display: flex; align-items: center; gap: 14px; }
+.titular-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: #6B21A8; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
+}
+.titular-nombre { font-size: 16px; font-weight: 700; color: #1e293b; }
+.titular-sub    { font-size: 12px; color: #64748B; margin-top: 2px; }
+
+/* ═══════════════════════════════════════
+   TICKET CIERRE / QUIÉN ATENDIÓ
+═══════════════════════════════════════ */
+.ticket-cierre {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid #E2E8F0;
+  font-size: 13px; color: #475569;
+}
+.cierre-por {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #F0FDF4; color: #166534;
+  border-radius: 6px; padding: 4px 10px; font-size: 12px;
+}
