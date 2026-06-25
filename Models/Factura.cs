@@ -3,16 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Facturas")]
-public class Factura
+[Table("Comprobante")]
+public class Factura   // Clase mantenida como Factura para no romper referencias existentes
 {
     [Key]
-    public int IdFactura { get; set; }
+    public int IdComprobante { get; set; }
     public int IdCita { get; set; }
     [Required, MaxLength(20)]
-    public string NumeroFactura { get; set; } = string.Empty;
+    public string TipoComprobante { get; set; } = "Boleta";   // Boleta / Factura
     [MaxLength(5)]
-    public string Serie { get; set; } = "F001";
+    public string Serie { get; set; } = "B001";
+    [Required, MaxLength(20)]
+    public string Numero { get; set; } = string.Empty;
     [Column(TypeName = "decimal(10,2)")]
     public decimal Subtotal { get; set; }
     [Column(TypeName = "decimal(10,2)")]
@@ -22,6 +24,8 @@ public class Factura
     [MaxLength(20)]
     public string EstadoPago { get; set; } = "Pendiente";
     public DateTime FechaEmision { get; set; } = DateTime.Now;
+    public int? IdUsuarioCreacion { get; set; }
+    public int? IdUsuarioModificacion { get; set; }
 
     [ForeignKey("IdCita")]
     public Cita? Cita { get; set; }

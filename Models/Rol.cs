@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Roles")]
+[Table("Rol")]
 public class Rol
 {
     [Key]

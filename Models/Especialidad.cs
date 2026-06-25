@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Especialidades")]
+[Table("Especialidad")]
 public class Especialidad
 {
     [Key]

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Usuarios")]
+[Table("Usuario")]
 public class Usuario
 {
     [Key]
@@ -13,8 +13,10 @@ public class Usuario
     public string Nombres { get; set; } = string.Empty;
     [Required, MaxLength(100)]
     public string Apellidos { get; set; } = string.Empty;
-    [Required, MaxLength(8)]
-    public string DNI { get; set; } = string.Empty;
+    [Required, MaxLength(10)]
+    public string TipoDocumento { get; set; } = "DNI";   // DNI / CE / RUC / PASAPORTE
+    [Required, MaxLength(20)]
+    public string NumeroDocumento { get; set; } = string.Empty;
     public DateTime? FechaNacimiento { get; set; }
     [MaxLength(1)]
     public string? Genero { get; set; }
@@ -27,6 +29,8 @@ public class Usuario
     public bool Activo { get; set; } = true;
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
     public DateTime? FechaModificacion { get; set; }
+    public int? IdUsuarioCreacion { get; set; }
+    public int? IdUsuarioModificacion { get; set; }
 
     [ForeignKey("IdRol")]
     public Rol? Rol { get; set; }

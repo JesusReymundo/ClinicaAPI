@@ -16,7 +16,7 @@ public class MedicoService : IMedicoService
     public IEnumerable<MedicoResponseDto> ObtenerTodos() =>
         _db.Medicos
             .Include(m => m.Usuario)
-            .Include(m => m.EspecialidadNav)
+            .Include(m => m.Tarifas).ThenInclude(t => t.Especialidad)
             .AsNoTracking()
             .Select(MapToDto)
             .ToList();
@@ -25,7 +25,7 @@ public class MedicoService : IMedicoService
     {
         var medico = _db.Medicos
             .Include(m => m.Usuario)
-            .Include(m => m.EspecialidadNav)
+            .Include(m => m.Tarifas).ThenInclude(t => t.Especialidad)
             .AsNoTracking()
             .FirstOrDefault(m => m.IdMedico == id)
             ?? throw new NotFoundException($"Médico con ID {id} no encontrado");
@@ -35,9 +35,9 @@ public class MedicoService : IMedicoService
     public IEnumerable<MedicoResponseDto> ObtenerPorEspecialidad(string especialidad) =>
         _db.Medicos
             .Include(m => m.Usuario)
-            .Include(m => m.EspecialidadNav)
+            .Include(m => m.Tarifas).ThenInclude(t => t.Especialidad)
             .AsNoTracking()
-            .Where(m => m.EspecialidadNav!.Nombre.Contains(especialidad))
+            .Where(m => m.Tarifas.Any(t => t.Especialidad!.Nombre.Contains(especialidad) && t.Activo))
             .Select(MapToDto)
             .ToList();
 
@@ -59,7 +59,8 @@ public class MedicoService : IMedicoService
             IdRol = 2,
             Nombres = dto.Nombre,
             Apellidos = dto.Apellido,
-            DNI = dto.ColegioMedico.Replace("-", "").PadLeft(8, '0')[..8],
+            TipoDocumento = "DNI",
+            NumeroDocumento = dto.ColegioMedico.Replace("-", "").PadLeft(8, '0')[..8],
             Username = dto.ColegioMedico,
             PasswordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(dto.ColegioMedico)),
             Activo = true
@@ -68,16 +69,32 @@ public class MedicoService : IMedicoService
         _db.SaveChanges();
 
         if (!string.IsNullOrEmpty(dto.Telefono))
-            _db.Contactos.Add(new Contacto { IdUsuario = usuario.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono, EsPrincipal = true });
+            _db.Contactos.Add(new Contacto
+            {
+                IdUsuario = usuario.IdUsuario,
+                TipoContacto = "Celular",
+                Valor = dto.Telefono,
+                EsPrincipal = true
+            });
         _db.SaveChanges();
 
         var medico = new Medico
         {
             IdUsuario = usuario.IdUsuario,
-            IdEspecialidad = especialidad.IdEspecialidad,
-            ColegioMedico = dto.ColegioMedico
+            ColegioMedico = dto.ColegioMedico,
+            Activo = true
         };
         _db.Medicos.Add(medico);
+        _db.SaveChanges();
+
+        // Crear tarifa inicial para la especialidad
+        _db.Tarifas.Add(new Tarifa
+        {
+            IdMedico = medico.IdMedico,
+            IdEspecialidad = especialidad.IdEspecialidad,
+            Monto = 0,
+            Activo = true
+        });
         _db.SaveChanges();
 
         return ObtenerPorId(medico.IdMedico);
@@ -85,7 +102,10 @@ public class MedicoService : IMedicoService
 
     public MedicoResponseDto Actualizar(int id, MedicoUpdateDto dto)
     {
-        var medico = _db.Medicos.Include(m => m.Usuario).FirstOrDefault(m => m.IdMedico == id)
+        var medico = _db.Medicos
+            .Include(m => m.Usuario)
+            .Include(m => m.Tarifas)
+            .FirstOrDefault(m => m.IdMedico == id)
             ?? throw new NotFoundException($"Médico con ID {id} no encontrado");
 
         if (_db.Medicos.Any(m => m.ColegioMedico == dto.ColegioMedico && m.IdMedico != id))
@@ -99,11 +119,23 @@ public class MedicoService : IMedicoService
         medico.Usuario.Apellidos = dto.Apellido;
         medico.Usuario.FechaModificacion = DateTime.Now;
         medico.ColegioMedico = dto.ColegioMedico;
-        medico.IdEspecialidad = especialidad.IdEspecialidad;
+        medico.FechaModificacion = DateTime.Now;
 
-        var telContacto = _db.Contactos.FirstOrDefault(c => c.IdUsuario == medico.IdUsuario && c.TipoContacto == "Telefono");
+        // Actualizar o crear tarifa de la especialidad indicada
+        var tarifa = medico.Tarifas.FirstOrDefault(t => t.IdEspecialidad == especialidad.IdEspecialidad);
+        if (tarifa == null)
+            _db.Tarifas.Add(new Tarifa
+            {
+                IdMedico = medico.IdMedico,
+                IdEspecialidad = especialidad.IdEspecialidad,
+                Monto = 0,
+                Activo = true
+            });
+
+        var telContacto = _db.Contactos.FirstOrDefault(c => c.IdUsuario == medico.IdUsuario && c.TipoContacto == "Celular");
         if (telContacto != null) telContacto.Valor = dto.Telefono;
-        else _db.Contactos.Add(new Contacto { IdUsuario = medico.IdUsuario, TipoContacto = "Telefono", Valor = dto.Telefono });
+        else if (!string.IsNullOrEmpty(dto.Telefono))
+            _db.Contactos.Add(new Contacto { IdUsuario = medico.IdUsuario, TipoContacto = "Celular", Valor = dto.Telefono });
 
         _db.SaveChanges();
         return ObtenerPorId(id);
@@ -122,7 +154,7 @@ public class MedicoService : IMedicoService
         Id = m.IdMedico,
         Nombre = m.Usuario?.Nombres ?? string.Empty,
         Apellido = m.Usuario?.Apellidos ?? string.Empty,
-        Especialidad = m.EspecialidadNav?.Nombre ?? string.Empty,
+        Especialidad = m.Tarifas.FirstOrDefault(t => t.Activo)?.Especialidad?.Nombre ?? string.Empty,
         ColegioMedico = m.ColegioMedico,
         Telefono = string.Empty
     };

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Citas")]
+[Table("Cita")]
 public class Cita
 {
     [Key]
@@ -16,7 +16,10 @@ public class Cita
     [Column("IdMedico")]
     public int MedicoId { get; set; }
 
-    [Column("IdEstado")]
+    public int IdEspecialidad { get; set; }
+    public int? IdTarifa { get; set; }
+
+    [Column("IdEstadoCita")]
     public int IdEstado { get; set; } = 1;
 
     [NotMapped]
@@ -36,6 +39,8 @@ public class Cita
 
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
     public DateTime? FechaModificacion { get; set; }
+    public int? IdUsuarioCreacion { get; set; }
+    public int? IdUsuarioModificacion { get; set; }
 
     [ForeignKey("PacienteId")]
     public Paciente? Paciente { get; set; }
@@ -45,4 +50,10 @@ public class Cita
 
     [ForeignKey("IdEstado")]
     public EstadoCitaDb? EstadoCitaNav { get; set; }
+
+    [ForeignKey("IdEspecialidad")]
+    public Especialidad? EspecialidadNav { get; set; }
+
+    [ForeignKey("IdTarifa")]
+    public Tarifa? TarifaNav { get; set; }
 }

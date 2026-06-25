@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicaAPI.Models;
 
-[Table("Empresas")]
+[Table("Empresa")]
 public class Empresa
 {
     [Key]
