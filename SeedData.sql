@@ -407,7 +407,7 @@ BEGIN
         SELECT TOP 1 @espId = IdEspecialidad, @tarifaId = IdTarifa
         FROM Tarifa WHERE IdMedico = @docId AND Activo = 1;
         SET @fechaCita = DATEADD(HOUR, 8 + (@i % 9),
-            DATEADD(DAY, -((@p - 1) * 6 + @i * 14 + 30), CAST(GETDATE() AS DATE)));
+            DATEADD(DAY, -((@p - 1) * 6 + @i * 14 + 30), CAST(GETDATE() AS DATETIME)));
         SELECT @mot = m FROM @motivos WHERE n = (@i % 15) + 1;
         INSERT INTO Cita (IdPaciente, IdMedico, IdEspecialidad, IdTarifa, IdEstadoCita,
                           FechaHora, Motivo, FechaCreacion)
@@ -426,7 +426,7 @@ BEGIN
     SET @tarifaId = NULL;
     SELECT TOP 1 @espId = IdEspecialidad, @tarifaId = IdTarifa
     FROM Tarifa WHERE IdMedico = @docId AND Activo = 1;
-    SET @fechaCita = DATEADD(HOUR, 9 + (@p % 8), DATEADD(DAY, 7 + @p, CAST(GETDATE() AS DATE)));
+    SET @fechaCita = DATEADD(HOUR, 9 + (@p % 8), DATEADD(DAY, 7 + @p, CAST(GETDATE() AS DATETIME)));
     SELECT @mot = m FROM @motivos WHERE n = (@p % 15) + 1;
     INSERT INTO Cita (IdPaciente, IdMedico, IdEspecialidad, IdTarifa, IdEstadoCita,
                       FechaHora, Motivo, FechaCreacion)
@@ -443,7 +443,7 @@ BEGIN
     SET @tarifaId = NULL;
     SELECT TOP 1 @espId = IdEspecialidad, @tarifaId = IdTarifa
     FROM Tarifa WHERE IdMedico = @docId AND Activo = 1;
-    SET @fechaCita = DATEADD(HOUR, 10 + (@p % 7), DATEADD(DAY, 3 + @p * 2, CAST(GETDATE() AS DATE)));
+    SET @fechaCita = DATEADD(HOUR, 10 + (@p % 7), DATEADD(DAY, 3 + @p * 2, CAST(GETDATE() AS DATETIME)));
     SELECT @mot = m FROM @motivos WHERE n = ((@p + 3) % 15) + 1;
     INSERT INTO Cita (IdPaciente, IdMedico, IdEspecialidad, IdTarifa, IdEstadoCita,
                       FechaHora, Motivo, FechaCreacion)
@@ -460,7 +460,7 @@ BEGIN
     SET @tarifaId = NULL;
     SELECT TOP 1 @espId = IdEspecialidad, @tarifaId = IdTarifa
     FROM Tarifa WHERE IdMedico = @docId AND Activo = 1;
-    SET @fechaCita = DATEADD(HOUR, 11, DATEADD(DAY, -(@p - 40), CAST(GETDATE() AS DATE)));
+    SET @fechaCita = DATEADD(HOUR, 11, DATEADD(DAY, -(@p - 40), CAST(GETDATE() AS DATETIME)));
     SELECT @mot = m FROM @motivos WHERE n = ((@p + 7) % 15) + 1;
     INSERT INTO Cita (IdPaciente, IdMedico, IdEspecialidad, IdTarifa, IdEstadoCita,
                       FechaHora, Motivo, FechaCreacion)
@@ -477,7 +477,7 @@ BEGIN
     SET @tarifaId = NULL;
     SELECT TOP 1 @espId = IdEspecialidad, @tarifaId = IdTarifa
     FROM Tarifa WHERE IdMedico = @docId AND Activo = 1;
-    SET @fechaCita = DATEADD(HOUR, 14, DATEADD(DAY, -(@p - 60), CAST(GETDATE() AS DATE)));
+    SET @fechaCita = DATEADD(HOUR, 14, DATEADD(DAY, -(@p - 60), CAST(GETDATE() AS DATETIME)));
     SELECT @mot = m FROM @motivos WHERE n = ((@p + 9) % 15) + 1;
     INSERT INTO Cita (IdPaciente, IdMedico, IdEspecialidad, IdTarifa, IdEstadoCita,
                       FechaHora, Motivo, FechaCreacion)
