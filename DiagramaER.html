@@ -5,250 +5,306 @@
 <title>Diagrama ER — ClinicaDB v2</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#1e1e2e; font-family:'Segoe UI',sans-serif; overflow:hidden; color:#fff; user-select:none; }
+body { background:#1a1a2e; font-family:'Segoe UI',sans-serif; overflow:hidden; color:#fff; user-select:none; }
 #toolbar {
-  position:fixed; top:0; left:0; right:0; z-index:100;
-  background:#13131f; border-bottom:1px solid #333;
-  display:flex; align-items:center; gap:12px; padding:8px 16px; height:46px;
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:#0f0f1a; border-bottom:2px solid #2d2d4e;
+  display:flex; align-items:center; gap:10px; padding:0 16px; height:48px;
 }
-#toolbar h1 { font-size:14px; font-weight:700; color:#a78bfa; white-space:nowrap; }
-#toolbar .badge { background:#7c3aed; color:#fff; border-radius:10px; padding:2px 8px; font-size:11px; }
-#toolbar .sep { width:1px; height:24px; background:#333; }
-.tbtn { background:#252535; border:1px solid #444; color:#ccc; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:12px; }
-.tbtn:hover { background:#333; color:#fff; }
-#search { background:#252535; border:1px solid #444; color:#fff; border-radius:6px; padding:4px 10px; font-size:12px; width:160px; outline:none; }
-#search::placeholder { color:#666; }
-#viewport { position:fixed; top:46px; left:0; right:0; bottom:0; overflow:hidden; cursor:grab; }
+#toolbar h1 { font-size:13px; font-weight:700; color:#a78bfa; white-space:nowrap; }
+.badge { background:#6d28d9; color:#fff; border-radius:12px; padding:2px 9px; font-size:11px; font-weight:600; }
+.badge-green { background:#065f46; }
+.sep { width:1px; height:26px; background:#2d2d4e; flex-shrink:0; }
+.tbtn {
+  background:#1e1e35; border:1px solid #3d3d60; color:#b0b0d0;
+  border-radius:6px; padding:5px 11px; cursor:pointer; font-size:12px;
+  transition:all .15s;
+}
+.tbtn:hover { background:#2a2a4a; color:#fff; border-color:#6d28d9; }
+.tbtn.active { background:#6d28d9; color:#fff; border-color:#7c3aed; }
+#search {
+  background:#1e1e35; border:1px solid #3d3d60; color:#fff;
+  border-radius:6px; padding:5px 12px; font-size:12px; width:170px; outline:none;
+  transition:border .15s;
+}
+#search:focus { border-color:#7c3aed; }
+#search::placeholder { color:#555; }
+#hint { font-size:11px; color:#555; white-space:nowrap; margin-left:auto; }
+#viewport { position:fixed; top:48px; left:0; right:0; bottom:30px; overflow:hidden; cursor:grab; }
 #viewport.panning { cursor:grabbing; }
-#canvas { position:relative; width:2200px; height:1700px; }
+#canvas { position:relative; width:3000px; height:2400px; }
 #svg-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
-.dbt { position:absolute; width:215px; background:#fff; border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,0.5); z-index:10; cursor:move; border:2px solid transparent; }
-.dbt:hover { box-shadow:0 4px 24px rgba(0,0,0,0.7); }
-.dbt.highlighted { border-color:#f59e0b !important; box-shadow:0 0 0 3px rgba(245,158,11,0.4) !important; }
-.dbt-hdr { padding:6px 10px; font-size:12px; font-weight:700; color:#fff; border-radius:2px 2px 0 0; display:flex; align-items:center; gap:6px; }
-.dbt-cols { overflow:hidden; border-radius:0 0 2px 2px; }
-.dbt-row { display:flex; align-items:center; padding:2px 8px; font-size:10.5px; border-bottom:1px solid #f0f0f0; background:#fff; min-height:21px; gap:4px; }
+#statusbar {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  background:#0f0f1a; border-top:1px solid #2d2d4e;
+  display:flex; align-items:center; gap:16px; padding:0 16px; height:30px; font-size:11px; color:#666;
+}
+#statusbar span { color:#888; }
+#statusbar b  { color:#a78bfa; }
+
+/* ── TABLE CARDS ── */
+.dbt {
+  position:absolute; width:220px; background:#1a1a2e;
+  border-radius:6px; box-shadow:0 3px 14px rgba(0,0,0,.6);
+  z-index:10; cursor:move; border:1.5px solid #2d2d4e;
+  transition:box-shadow .15s, border-color .15s;
+}
+.dbt:hover { box-shadow:0 6px 28px rgba(0,0,0,.8); border-color:#4d4d80; }
+.dbt.highlighted { border-color:#f59e0b !important; box-shadow:0 0 0 3px rgba(245,158,11,.35) !important; }
+.dbt.dimmed { opacity:.25; }
+.dbt-hdr {
+  padding:7px 10px; font-size:12px; font-weight:700; color:#fff;
+  border-radius:4px 4px 0 0; display:flex; align-items:center; gap:6px;
+}
+.dbt-hdr .tbl-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dbt-hdr .col-count { font-size:10px; background:rgba(0,0,0,.25); padding:1px 6px; border-radius:10px; flex-shrink:0; }
+.dbt-cols { overflow:hidden; border-radius:0 0 4px 4px; }
+.dbt-row {
+  display:flex; align-items:center; padding:3px 8px;
+  font-size:10.5px; border-bottom:1px solid #222240; background:#14142a;
+  min-height:22px; gap:4px;
+}
 .dbt-row:last-child { border-bottom:none; }
-.dbt-row.pk { background:#fff8e1; }
-.dbt-row.fk { background:#e8f4fd; }
-.dbt-row.pk.fk { background:#f3e5f5; }
-.col-icon { width:14px; font-size:9px; flex-shrink:0; text-align:center; }
-.col-name { flex:1; color:#1a1a2e; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.col-name.pk-name { font-weight:700; }
-.col-type { color:#888; font-size:9.5px; white-space:nowrap; }
+.dbt-row.pk   { background:#1c1435; }
+.dbt-row.fk   { background:#112135; }
+.dbt-row.pk.fk{ background:#1c1235; }
+.dbt-row.audit{ background:#131325; }
+.dbt-row.hidden { display:none; }
+.col-icon { width:13px; font-size:9px; flex-shrink:0; text-align:center; color:#666; }
+.col-name { flex:1; color:#c8c8e8; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.col-name.pk-name { color:#f59e0b; font-weight:700; }
+.col-name.fk-name { color:#60a5fa; }
+.col-type { color:#55556b; font-size:9.5px; white-space:nowrap; }
 .col-tag { font-size:8px; color:#fff; padding:0 3px; border-radius:2px; margin-left:2px; flex-shrink:0; }
-.tag-pk { background:#f59e0b; } .tag-fk { background:#3b82f6; }
-.tag-uq { background:#8b5cf6; } .tag-nn { background:#6b7280; }
-#legend { position:fixed; bottom:16px; left:16px; z-index:100; background:#13131f; border:1px solid #333; border-radius:8px; padding:10px 14px; display:flex; flex-direction:column; gap:5px; }
-#legend h4 { font-size:10px; color:#888; text-transform:uppercase; margin-bottom:2px; }
-.leg-row { display:flex; align-items:center; gap:6px; font-size:10px; color:#ccc; }
+.tag-pk  { background:#d97706; }
+.tag-fk  { background:#2563eb; }
+.tag-uq  { background:#7c3aed; }
+.tag-nn  { background:#374151; }
+
+/* ── LEGEND ── */
+#legend {
+  position:fixed; bottom:36px; left:16px; z-index:200;
+  background:#0f0f1a; border:1px solid #2d2d4e; border-radius:8px;
+  padding:10px 14px; display:flex; flex-direction:column; gap:4px;
+}
+#legend h4 { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+.leg-row { display:flex; align-items:center; gap:7px; font-size:10px; color:#888; }
 .leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.leg-sep { height:1px; background:#1d1d30; margin:2px 0; }
+
+/* ── TOOLTIP ── */
+#tooltip {
+  position:fixed; z-index:300; background:#0f0f1a; border:1px solid #7c3aed;
+  border-radius:6px; padding:6px 10px; font-size:11px; color:#ccc;
+  pointer-events:none; display:none; max-width:220px;
+}
 </style>
 </head>
 <body>
+
 <div id="toolbar">
-  <h1>🗃️ Diagrama ER — ClinicaDB v2</h1>
+  <h1>🗃 ClinicaDB v2</h1>
   <span class="badge">26 tablas</span>
+  <span class="badge badge-green">27 relaciones FK</span>
   <div class="sep"></div>
-  <button class="tbtn" onclick="zoom(1.2)">+ Zoom</button>
-  <button class="tbtn" onclick="zoom(0.8)">− Zoom</button>
+  <button class="tbtn" onclick="zoom(1.2)">＋ Zoom</button>
+  <button class="tbtn" onclick="zoom(0.8)">－ Zoom</button>
   <button class="tbtn" onclick="resetView()">⟳ Reset</button>
   <button class="tbtn" onclick="fitAll()">⤢ Ajustar</button>
   <div class="sep"></div>
-  <input id="search" type="text" placeholder="Buscar tabla..." oninput="searchTable(this.value)">
+  <button class="tbtn" id="btnAudit" onclick="toggleAudit()" title="Ocultar/mostrar columnas de auditoría">👁 Auditoría</button>
+  <button class="tbtn" id="btnLines" onclick="toggleLines()">〰 Relaciones</button>
   <div class="sep"></div>
-  <span style="font-size:11px;color:#888">🖱️ Drag para mover tablas &nbsp;|&nbsp; Scroll para zoom &nbsp;|&nbsp; Clic = resaltar relaciones</span>
+  <input id="search" type="text" placeholder="🔍 Buscar tabla..." oninput="searchTable(this.value)">
+  <div class="sep"></div>
+  <span id="hint">🖱 Arrastra tablas · Scroll = zoom · Clic = resaltar</span>
 </div>
+
 <div id="viewport">
   <div id="canvas">
     <svg id="svg-overlay"></svg>
   </div>
 </div>
+
 <div id="legend">
   <h4>Grupos</h4>
-  <div class="leg-row"><div class="leg-dot" style="background:#7c3aed"></div> Identidad</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#0284c7"></div> Médicos / Horarios</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#059669"></div> Pacientes / Seguros</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#d97706"></div> Citas / Catálogos</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#dc2626"></div> Clínico / Financiero</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#6b7280"></div> Soporte</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#7c3aed"></div>Catálogos / Identidad</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#0284c7"></div>Médicos / Horarios</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#059669"></div>Pacientes / Seguros</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#d97706"></div>Citas</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#dc2626"></div>Clínico / Financiero</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#475569"></div>Soporte</div>
+  <div class="leg-sep"></div>
+  <div class="leg-row"><div class="leg-dot" style="background:#d97706; border-radius:50%"></div>🔑 PK &nbsp; <div class="leg-dot" style="background:#2563eb; border-radius:50%"></div>🔗 FK</div>
 </div>
+
+<div id="statusbar">
+  <span>Zoom: <b id="zoomLabel">100%</b></span>
+  <span>Tabla activa: <b id="activeTable">—</b></span>
+  <span id="relCount">Relaciones visibles: <b>27</b></span>
+  <span style="margin-left:auto">ClinicaDB v2 · .NET 8 · SQL Server · IDAT 5to Ciclo 2024</span>
+</div>
+
+<div id="tooltip"></div>
+
 <script>
-const W=215, HDR=26, ROW=20;
+/* ═══════════════════════════════════════════════════
+   DATOS
+═══════════════════════════════════════════════════ */
+const W=220, HDR=28, ROW=22;
+const AUDIT_COLS = ['FechaCreacion','FechaModificacion','IdUsuarioCreacion','IdUsuarioModificacion'];
+
 const TABLES = {
-  // ── CATÁLOGOS ──────────────────────────────────────────
-  Rol:           { x:20,   y:30,  color:'#7c3aed', cols:[
-    {n:'IdRol',        t:'INT',         pk:true},
-    {n:'NombreRol',    t:'VARCHAR(50)', nn:true, uq:true},
-    {n:'Descripcion',  t:'VARCHAR(200)'},
-    {n:'Activo',       t:'BIT',         nn:true},
-    {n:'FechaCreacion',t:'DATETIME',    nn:true},
+  // ── CATÁLOGOS (fila 0, y=40) ──────────────────────────
+  Rol:           { x:20,   y:40,  color:'#7c3aed', cols:[
+    {n:'IdRol',         t:'INT',          pk:true},
+    {n:'NombreRol',     t:'VARCHAR(50)',  nn:true, uq:true},
+    {n:'Descripcion',   t:'VARCHAR(200)'},
+    {n:'Activo',        t:'BIT',          nn:true},
+    {n:'FechaCreacion', t:'DATETIME',     nn:true, audit:true},
   ]},
-  TipoDocumento: { x:255,  y:30,  color:'#7c3aed', cols:[
-    {n:'IdTipoDocumento',t:'INT',        pk:true},
-    {n:'Codigo',          t:'VARCHAR(10)',nn:true, uq:true},
-    {n:'Nombre',          t:'VARCHAR(50)',nn:true},
+  TipoDocumento: { x:255,  y:40,  color:'#7c3aed', cols:[
+    {n:'IdTipoDocumento', t:'INT',          pk:true},
+    {n:'Codigo',          t:'VARCHAR(10)',  nn:true, uq:true},
+    {n:'Nombre',          t:'VARCHAR(50)',  nn:true},
     {n:'Longitud',        t:'INT'},
-    {n:'Activo',          t:'BIT',        nn:true},
-  ]},
-  Especialidad:  { x:490,  y:30,  color:'#0284c7', cols:[
-    {n:'IdEspecialidad', t:'INT',          pk:true},
-    {n:'Nombre',          t:'VARCHAR(100)', nn:true, uq:true},
-    {n:'Descripcion',     t:'VARCHAR(300)'},
     {n:'Activo',          t:'BIT',          nn:true},
-    {n:'FechaCreacion',   t:'DATETIME',     nn:true},
   ]},
-  TipoAsegurado: { x:725,  y:30,  color:'#059669', cols:[
-    {n:'IdTipoAsegurado', t:'INT',        pk:true},
-    {n:'Nombre',           t:'VARCHAR(50)',nn:true, uq:true},
+  Especialidad:  { x:490,  y:40,  color:'#0284c7', cols:[
+    {n:'IdEspecialidad', t:'INT',           pk:true},
+    {n:'Nombre',         t:'VARCHAR(100)',  nn:true, uq:true},
+    {n:'Descripcion',    t:'VARCHAR(300)'},
+    {n:'Activo',         t:'BIT',           nn:true},
+    {n:'FechaCreacion',  t:'DATETIME',      nn:true, audit:true},
   ]},
-  Empresa:       { x:960,  y:30,  color:'#059669', cols:[
-    {n:'IdEmpresa',           t:'INT',          pk:true},
-    {n:'RazonSocial',          t:'VARCHAR(200)', nn:true},
-    {n:'RUC',                  t:'VARCHAR(11)',  nn:true, uq:true},
-    {n:'Direccion',            t:'VARCHAR(200)'},
-    {n:'Telefono',             t:'VARCHAR(20)'},
-    {n:'Email',                t:'VARCHAR(150)'},
-    {n:'Activo',               t:'BIT',          nn:true},
-    {n:'FechaCreacion',        t:'DATETIME',     nn:true},
-    {n:'FechaModificacion',    t:'DATETIME'},
-    {n:'IdUsuarioCreacion',    t:'INT'},
-    {n:'IdUsuarioModificacion',t:'INT'},
+  EstadoCita:    { x:725,  y:40,  color:'#d97706', cols:[
+    {n:'IdEstadoCita', t:'INT',         pk:true},
+    {n:'Nombre',        t:'VARCHAR(50)', nn:true, uq:true},
   ]},
-  EstadoCita:    { x:1195, y:30,  color:'#d97706', cols:[
-    {n:'IdEstadoCita', t:'INT',        pk:true},
-    {n:'Nombre',        t:'VARCHAR(50)',nn:true, uq:true},
+  MetodoPago:    { x:960,  y:40,  color:'#dc2626', cols:[
+    {n:'IdMetodoPago', t:'INT',         pk:true},
+    {n:'Nombre',        t:'VARCHAR(50)', nn:true, uq:true},
+    {n:'Activo',        t:'BIT',         nn:true},
   ]},
-  MetodoPago:    { x:1420, y:30,  color:'#dc2626', cols:[
-    {n:'IdMetodoPago', t:'INT',        pk:true},
-    {n:'Nombre',        t:'VARCHAR(50)',nn:true, uq:true},
-    {n:'Activo',        t:'BIT',        nn:true},
-  ]},
-  TipoConsulta:  { x:1650, y:30,  color:'#d97706', cols:[
+  TipoConsulta:  { x:1195, y:40,  color:'#d97706', cols:[
     {n:'IdTipoConsulta', t:'INT',           pk:true},
     {n:'Nombre',          t:'VARCHAR(50)',   nn:true, uq:true},
     {n:'Descripcion',     t:'VARCHAR(200)'},
     {n:'TarifaExtra',     t:'DECIMAL(10,2)'},
   ]},
-  Consultorio:   { x:1880, y:30,  color:'#0284c7', cols:[
-    {n:'IdConsultorio',        t:'INT',          pk:true},
-    {n:'Nombre',                t:'VARCHAR(100)', nn:true},
-    {n:'Numero',                t:'VARCHAR(10)',  nn:true},
-    {n:'Piso',                  t:'VARCHAR(10)'},
-    {n:'Descripcion',           t:'VARCHAR(200)'},
-    {n:'Capacidad',             t:'INT',          nn:true},
-    {n:'Telefono',              t:'VARCHAR(20)'},
-    {n:'Activo',                t:'BIT',          nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',     nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+  TipoAsegurado: { x:1430, y:40,  color:'#059669', cols:[
+    {n:'IdTipoAsegurado', t:'INT',         pk:true},
+    {n:'Nombre',           t:'VARCHAR(50)', nn:true, uq:true},
   ]},
-  // ── IDENTIDAD ──────────────────────────────────────────
-  Usuario:       { x:20,   y:300, color:'#7c3aed', cols:[
-    {n:'IdUsuario',             t:'INT',          pk:true},
-    {n:'IdRol',                 t:'INT',          fk:true, ref:'Rol.IdRol', nn:true},
-    {n:'Nombres',               t:'VARCHAR(100)', nn:true},
-    {n:'Apellidos',             t:'VARCHAR(100)', nn:true},
-    {n:'TipoDocumento',         t:'VARCHAR(10)',  nn:true},
-    {n:'NumeroDocumento',       t:'VARCHAR(20)',  nn:true, uq:true},
+  Empresa:       { x:1665, y:40,  color:'#059669', cols:[
+    {n:'IdEmpresa',           t:'INT',           pk:true},
+    {n:'RazonSocial',          t:'VARCHAR(200)',  nn:true},
+    {n:'RUC',                  t:'VARCHAR(11)',   nn:true, uq:true},
+    {n:'Direccion',            t:'VARCHAR(200)'},
+    {n:'Telefono',             t:'VARCHAR(20)'},
+    {n:'Email',                t:'VARCHAR(150)'},
+    {n:'Activo',               t:'BIT',           nn:true},
+    {n:'FechaCreacion',        t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',    t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',    t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion',t:'INT',            audit:true},
+  ]},
+  Consultorio:   { x:1900, y:40,  color:'#0284c7', cols:[
+    {n:'IdConsultorio',         t:'INT',           pk:true},
+    {n:'Nombre',                 t:'VARCHAR(100)',  nn:true},
+    {n:'Numero',                 t:'VARCHAR(10)',   nn:true},
+    {n:'Piso',                   t:'VARCHAR(10)'},
+    {n:'Descripcion',            t:'VARCHAR(200)'},
+    {n:'Capacidad',              t:'INT',           nn:true},
+    {n:'Telefono',               t:'VARCHAR(20)'},
+    {n:'Activo',                 t:'BIT',           nn:true},
+    {n:'FechaCreacion',          t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',      t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',      t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion',  t:'INT',            audit:true},
+  ]},
+
+  // ── IDENTIDAD (fila 1, y=290) ─────────────────────────
+  Usuario:       { x:20,   y:290, color:'#7c3aed', cols:[
+    {n:'IdUsuario',             t:'INT',           pk:true},
+    {n:'IdRol',                 t:'INT',           fk:true, ref:'Rol.IdRol', nn:true},
+    {n:'Nombres',               t:'VARCHAR(100)',  nn:true},
+    {n:'Apellidos',             t:'VARCHAR(100)',  nn:true},
+    {n:'TipoDocumento',         t:'VARCHAR(10)',   nn:true},
+    {n:'NumeroDocumento',       t:'VARCHAR(20)',   nn:true, uq:true},
     {n:'FechaNacimiento',       t:'DATE'},
     {n:'Genero',                t:'CHAR(1)'},
     {n:'Direccion',             t:'VARCHAR(200)'},
-    {n:'Username',              t:'VARCHAR(50)',  nn:true, uq:true},
-    {n:'PasswordHash',          t:'VARCHAR(256)', nn:true},
+    {n:'Username',              t:'VARCHAR(50)',   nn:true, uq:true},
+    {n:'PasswordHash',          t:'VARCHAR(256)',  nn:true},
+    {n:'Activo',                t:'BIT',           nn:true},
+    {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
+  ]},
+  Contacto:      { x:255,  y:290, color:'#475569', cols:[
+    {n:'IdContacto',    t:'INT',          pk:true},
+    {n:'IdUsuario',      t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true},
+    {n:'TipoContacto',  t:'VARCHAR(20)',  nn:true},
+    {n:'Valor',          t:'VARCHAR(150)', nn:true},
+    {n:'EsPrincipal',   t:'BIT',          nn:true},
+    {n:'FechaCreacion', t:'DATETIME',     nn:true, audit:true},
+  ]},
+
+  // ── MÉDICOS (fila 1 derecha) ──────────────────────────
+  Medico:        { x:490,  y:290, color:'#0284c7', cols:[
+    {n:'IdMedico',              t:'INT',          pk:true},
+    {n:'IdUsuario',             t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
+    {n:'ColegioMedico',         t:'VARCHAR(20)',  nn:true, uq:true},
     {n:'Activo',                t:'BIT',          nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',     nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'FechaCreacion',         t:'DATETIME',     nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',     audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',           audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',           audit:true},
   ]},
-  // ── MÉDICOS ────────────────────────────────────────────
-  Medico:        { x:255,  y:300, color:'#0284c7', cols:[
-    {n:'IdMedico',              t:'INT',         pk:true},
-    {n:'IdUsuario',             t:'INT',         fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
-    {n:'ColegioMedico',         t:'VARCHAR(20)', nn:true, uq:true},
-    {n:'Activo',                t:'BIT',         nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',    nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
-  ]},
-  Tarifa:        { x:490,  y:300, color:'#0284c7', cols:[
+  Tarifa:        { x:725,  y:290, color:'#0284c7', cols:[
     {n:'IdTarifa',              t:'INT',           pk:true},
     {n:'IdMedico',              t:'INT',           fk:true, ref:'Medico.IdMedico', nn:true},
     {n:'IdEspecialidad',        t:'INT',           fk:true, ref:'Especialidad.IdEspecialidad', nn:true},
     {n:'Monto',                 t:'DECIMAL(10,2)', nn:true},
     {n:'Descripcion',           t:'VARCHAR(200)'},
     {n:'Activo',                t:'BIT',           nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',      nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
   ]},
-  // ── PACIENTES ──────────────────────────────────────────
-  Paciente:      { x:725,  y:300, color:'#059669', cols:[
-    {n:'IdPaciente',            t:'INT',         pk:true},
-    {n:'IdUsuario',             t:'INT',         fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
-    {n:'IdTipoAsegurado',       t:'INT',         fk:true, ref:'TipoAsegurado.IdTipoAsegurado', nn:true},
-    {n:'IdEmpresa',             t:'INT',         fk:true, ref:'Empresa.IdEmpresa'},
+  HorarioMedico: { x:960,  y:290, color:'#0284c7', cols:[
+    {n:'IdHorario',             t:'INT',      pk:true},
+    {n:'IdMedico',              t:'INT',      fk:true, ref:'Medico.IdMedico', nn:true},
+    {n:'IdConsultorio',         t:'INT',      fk:true, ref:'Consultorio.IdConsultorio'},
+    {n:'DiaSemana',             t:'INT (1-7)',nn:true},
+    {n:'HoraInicio',            t:'TIME',     nn:true},
+    {n:'HoraFin',               t:'TIME',     nn:true},
+    {n:'Activo',                t:'BIT',      nn:true},
+    {n:'FechaCreacion',         t:'DATETIME', nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME', audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',       audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',       audit:true},
+  ]},
+
+  // ── PACIENTES (fila 2, y=600) ─────────────────────────
+  Paciente:      { x:20,   y:640, color:'#059669', cols:[
+    {n:'IdPaciente',            t:'INT',          pk:true},
+    {n:'IdUsuario',             t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
+    {n:'IdTipoAsegurado',       t:'INT',          fk:true, ref:'TipoAsegurado.IdTipoAsegurado', nn:true},
+    {n:'IdEmpresa',             t:'INT',          fk:true, ref:'Empresa.IdEmpresa'},
     {n:'NumeroSeguro',          t:'VARCHAR(50)'},
     {n:'GrupoSanguineo',        t:'VARCHAR(5)'},
     {n:'Alergias',              t:'VARCHAR(500)'},
-    {n:'Activo',                t:'BIT',         nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',    nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'Activo',                t:'BIT',          nn:true},
+    {n:'FechaCreacion',         t:'DATETIME',     nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',     audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',           audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',           audit:true},
   ]},
-  // ── CITAS ──────────────────────────────────────────────
-  Cita:          { x:960,  y:300, color:'#d97706', cols:[
-    {n:'IdCita',                t:'INT',          pk:true},
-    {n:'IdPaciente',            t:'INT',          fk:true, ref:'Paciente.IdPaciente', nn:true},
-    {n:'IdMedico',              t:'INT',          fk:true, ref:'Medico.IdMedico', nn:true},
-    {n:'IdEspecialidad',        t:'INT',          fk:true, ref:'Especialidad.IdEspecialidad', nn:true},
-    {n:'IdTarifa',              t:'INT',          fk:true, ref:'Tarifa.IdTarifa'},
-    {n:'IdEstadoCita',          t:'INT',          fk:true, ref:'EstadoCita.IdEstadoCita', nn:true},
-    {n:'IdConsultorio',         t:'INT',          fk:true, ref:'Consultorio.IdConsultorio'},
-    {n:'IdTipoConsulta',        t:'INT',          fk:true, ref:'TipoConsulta.IdTipoConsulta'},
-    {n:'FechaHora',             t:'DATETIME',     nn:true},
-    {n:'Motivo',                t:'VARCHAR(300)', nn:true},
-    {n:'Observaciones',         t:'VARCHAR(500)'},
-    {n:'FechaCreacion',         t:'DATETIME',     nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
-  ]},
-  CancelacionCita:{ x:1195, y:300, color:'#d97706', cols:[
-    {n:'IdCancelacion',    t:'INT',          pk:true},
-    {n:'IdCita',            t:'INT',          fk:true, ref:'Cita.IdCita', nn:true},
-    {n:'Motivo',            t:'VARCHAR(300)'},
-    {n:'CanceladoPor',      t:'VARCHAR(50)'},
-    {n:'FechaCancelacion',  t:'DATETIME',     nn:true},
-  ]},
-  // ── SEGUNDA FILA ───────────────────────────────────────
-  Contacto:      { x:20,   y:700, color:'#6b7280', cols:[
-    {n:'IdContacto',    t:'INT',          pk:true},
-    {n:'IdUsuario',      t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true},
-    {n:'TipoContacto',  t:'VARCHAR(20)',  nn:true},
-    {n:'Valor',          t:'VARCHAR(150)', nn:true},
-    {n:'EsPrincipal',   t:'BIT',          nn:true},
-    {n:'FechaCreacion', t:'DATETIME',     nn:true},
-  ]},
-  HorarioMedico: { x:255,  y:700, color:'#0284c7', cols:[
-    {n:'IdHorario',             t:'INT',     pk:true},
-    {n:'IdMedico',              t:'INT',     fk:true, ref:'Medico.IdMedico', nn:true},
-    {n:'IdConsultorio',         t:'INT',     fk:true, ref:'Consultorio.IdConsultorio'},
-    {n:'DiaSemana',             t:'INT',     nn:true},
-    {n:'HoraInicio',            t:'TIME',    nn:true},
-    {n:'HoraFin',               t:'TIME',    nn:true},
-    {n:'Activo',                t:'BIT',     nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
-  ]},
-  Seguro:        { x:490,  y:700, color:'#059669', cols:[
+  Seguro:        { x:255,  y:640, color:'#059669', cols:[
     {n:'IdSeguro',              t:'INT',           pk:true},
     {n:'IdPaciente',            t:'INT',           fk:true, ref:'Paciente.IdPaciente', nn:true},
     {n:'NombreSeguro',          t:'VARCHAR(100)',   nn:true},
@@ -258,12 +314,96 @@ const TABLES = {
     {n:'FechaVencimiento',      t:'DATE'},
     {n:'CoberturaMax',          t:'DECIMAL(10,2)'},
     {n:'Activo',                t:'BIT',           nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',      nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
   ]},
-  Comprobante:   { x:725,  y:700, color:'#dc2626', cols:[
+
+  // ── CITAS (fila 2 centro) ─────────────────────────────
+  Cita:          { x:490,  y:640, color:'#d97706', cols:[
+    {n:'IdCita',                t:'INT',           pk:true},
+    {n:'IdPaciente',            t:'INT',           fk:true, ref:'Paciente.IdPaciente', nn:true},
+    {n:'IdMedico',              t:'INT',           fk:true, ref:'Medico.IdMedico', nn:true},
+    {n:'IdEspecialidad',        t:'INT',           fk:true, ref:'Especialidad.IdEspecialidad', nn:true},
+    {n:'IdTarifa',              t:'INT',           fk:true, ref:'Tarifa.IdTarifa'},
+    {n:'IdEstadoCita',          t:'INT',           fk:true, ref:'EstadoCita.IdEstadoCita', nn:true},
+    {n:'IdConsultorio',         t:'INT',           fk:true, ref:'Consultorio.IdConsultorio'},
+    {n:'IdTipoConsulta',        t:'INT',           fk:true, ref:'TipoConsulta.IdTipoConsulta'},
+    {n:'FechaHora',             t:'DATETIME',      nn:true},
+    {n:'Motivo',                t:'VARCHAR(300)',   nn:true},
+    {n:'Observaciones',         t:'VARCHAR(500)'},
+    {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
+  ]},
+  CancelacionCita:{ x:725, y:640, color:'#d97706', cols:[
+    {n:'IdCancelacion',   t:'INT',          pk:true},
+    {n:'IdCita',           t:'INT',          fk:true, ref:'Cita.IdCita', nn:true},
+    {n:'Motivo',           t:'VARCHAR(300)'},
+    {n:'CanceladoPor',     t:'VARCHAR(50)'},
+    {n:'FechaCancelacion', t:'DATETIME',     nn:true},
+  ]},
+
+  // ── CLÍNICO (fila 3, y=1040) ──────────────────────────
+  Triaje:        { x:20,   y:1040, color:'#dc2626', cols:[
+    {n:'IdTriaje',           t:'INT',          pk:true},
+    {n:'IdCita',              t:'INT',          fk:true, ref:'Cita.IdCita', nn:true, uq:true},
+    {n:'Peso',                t:'DECIMAL(5,2)'},
+    {n:'Talla',               t:'DECIMAL(5,2)'},
+    {n:'PresionSistolica',   t:'INT'},
+    {n:'PresionDiastolica',  t:'INT'},
+    {n:'FrecuenciaCardiaca', t:'INT'},
+    {n:'Temperatura',         t:'DECIMAL(4,1)'},
+    {n:'Saturacion',          t:'DECIMAL(4,1)'},
+    {n:'FechaRegistro',       t:'DATETIME',     nn:true, audit:true},
+    {n:'IdUsuarioCreacion',   t:'INT',           audit:true},
+  ]},
+  HistorialClinico:{ x:255, y:1040, color:'#dc2626', cols:[
+    {n:'IdHistorial',       t:'INT',          pk:true},
+    {n:'IdPaciente',         t:'INT',          fk:true, ref:'Paciente.IdPaciente', nn:true},
+    {n:'IdCita',             t:'INT',          fk:true, ref:'Cita.IdCita'},
+    {n:'Diagnostico',       t:'VARCHAR(500)'},
+    {n:'Tratamiento',       t:'VARCHAR(500)'},
+    {n:'Evolucion',          t:'VARCHAR(500)'},
+    {n:'FechaRegistro',     t:'DATETIME',     nn:true, audit:true},
+    {n:'IdUsuarioCreacion', t:'INT',           audit:true},
+  ]},
+  Receta:        { x:490,  y:1040, color:'#dc2626', cols:[
+    {n:'IdReceta',          t:'INT',          pk:true},
+    {n:'IdCita',             t:'INT',          fk:true, ref:'Cita.IdCita', nn:true, uq:true},
+    {n:'Diagnostico',       t:'VARCHAR(500)'},
+    {n:'Indicaciones',      t:'VARCHAR(500)'},
+    {n:'FechaEmision',      t:'DATETIME',     nn:true},
+    {n:'IdUsuarioCreacion', t:'INT',           audit:true},
+  ]},
+  ItemReceta:    { x:725,  y:1040, color:'#dc2626', cols:[
+    {n:'IdItem',        t:'INT',          pk:true},
+    {n:'IdReceta',       t:'INT',          fk:true, ref:'Receta.IdReceta', nn:true},
+    {n:'IdMedicamento', t:'INT',          fk:true, ref:'Medicamento.IdMedicamento', nn:true},
+    {n:'Dosis',         t:'VARCHAR(100)'},
+    {n:'Frecuencia',    t:'VARCHAR(100)'},
+    {n:'Duracion',      t:'VARCHAR(50)'},
+    {n:'Cantidad',      t:'INT',          nn:true},
+  ]},
+  Medicamento:   { x:960,  y:1040, color:'#dc2626', cols:[
+    {n:'IdMedicamento',         t:'INT',           pk:true},
+    {n:'Nombre',                 t:'VARCHAR(200)',  nn:true},
+    {n:'Presentacion',          t:'VARCHAR(100)'},
+    {n:'Concentracion',         t:'VARCHAR(50)'},
+    {n:'Laboratorio',           t:'VARCHAR(100)'},
+    {n:'Precio',                 t:'DECIMAL(10,2)', nn:true},
+    {n:'Stock',                  t:'INT',           nn:true},
+    {n:'Activo',                 t:'BIT',           nn:true},
+    {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',      audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
+  ]},
+
+  // ── FINANCIERO (fila 3 derecha) ───────────────────────
+  Comprobante:   { x:1195, y:1040, color:'#7c3aed', cols:[
     {n:'IdComprobante',         t:'INT',           pk:true},
     {n:'IdCita',                t:'INT',           fk:true, ref:'Cita.IdCita', nn:true, uq:true},
     {n:'TipoComprobante',       t:'VARCHAR(20)',   nn:true},
@@ -274,263 +414,295 @@ const TABLES = {
     {n:'Total',                 t:'DECIMAL(10,2)', nn:true},
     {n:'EstadoPago',            t:'VARCHAR(20)',   nn:true},
     {n:'FechaEmision',          t:'DATETIME',      nn:true},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',            audit:true},
   ]},
-  Pago:          { x:960,  y:700, color:'#dc2626', cols:[
+  Pago:          { x:1430, y:1040, color:'#7c3aed', cols:[
     {n:'IdPago',            t:'INT',           pk:true},
     {n:'IdComprobante',      t:'INT',           fk:true, ref:'Comprobante.IdComprobante', nn:true},
     {n:'IdMetodoPago',      t:'INT',           fk:true, ref:'MetodoPago.IdMetodoPago', nn:true},
     {n:'Monto',              t:'DECIMAL(10,2)', nn:true},
     {n:'NroOperacion',      t:'VARCHAR(50)'},
     {n:'FechaPago',         t:'DATETIME',      nn:true},
-    {n:'IdUsuarioCreacion', t:'INT'},
-  ]},
-  // ── CLÍNICO ────────────────────────────────────────────
-  Triaje:        { x:20,   y:1060, color:'#dc2626', cols:[
-    {n:'IdTriaje',            t:'INT',         pk:true},
-    {n:'IdCita',               t:'INT',         fk:true, ref:'Cita.IdCita', nn:true, uq:true},
-    {n:'Peso',                 t:'DECIMAL(5,2)'},
-    {n:'Talla',                t:'DECIMAL(5,2)'},
-    {n:'PresionSistolica',    t:'INT'},
-    {n:'PresionDiastolica',   t:'INT'},
-    {n:'FrecuenciaCardiaca',  t:'INT'},
-    {n:'Temperatura',          t:'DECIMAL(4,1)'},
-    {n:'Saturacion',           t:'DECIMAL(4,1)'},
-    {n:'FechaRegistro',        t:'DATETIME',    nn:true},
-    {n:'IdUsuarioCreacion',    t:'INT'},
-  ]},
-  HistorialClinico:{ x:255, y:1060, color:'#dc2626', cols:[
-    {n:'IdHistorial',       t:'INT',          pk:true},
-    {n:'IdPaciente',         t:'INT',          fk:true, ref:'Paciente.IdPaciente', nn:true},
-    {n:'IdCita',             t:'INT',          fk:true, ref:'Cita.IdCita'},
-    {n:'Diagnostico',       t:'VARCHAR(500)'},
-    {n:'Tratamiento',       t:'VARCHAR(500)'},
-    {n:'Evolucion',          t:'VARCHAR(500)'},
-    {n:'FechaRegistro',     t:'DATETIME',     nn:true},
-    {n:'IdUsuarioCreacion', t:'INT'},
-  ]},
-  Receta:        { x:490,  y:1060, color:'#dc2626', cols:[
-    {n:'IdReceta',          t:'INT',          pk:true},
-    {n:'IdCita',             t:'INT',          fk:true, ref:'Cita.IdCita', nn:true, uq:true},
-    {n:'Diagnostico',       t:'VARCHAR(500)'},
-    {n:'Indicaciones',      t:'VARCHAR(500)'},
-    {n:'FechaEmision',      t:'DATETIME',     nn:true},
-    {n:'IdUsuarioCreacion', t:'INT'},
-  ]},
-  ItemReceta:    { x:725,  y:1060, color:'#dc2626', cols:[
-    {n:'IdItem',         t:'INT',          pk:true},
-    {n:'IdReceta',        t:'INT',          fk:true, ref:'Receta.IdReceta', nn:true},
-    {n:'IdMedicamento',  t:'INT',          fk:true, ref:'Medicamento.IdMedicamento', nn:true},
-    {n:'Dosis',          t:'VARCHAR(100)'},
-    {n:'Frecuencia',     t:'VARCHAR(100)'},
-    {n:'Duracion',       t:'VARCHAR(50)'},
-    {n:'Cantidad',       t:'INT',          nn:true},
-  ]},
-  Medicamento:   { x:960,  y:1060, color:'#dc2626', cols:[
-    {n:'IdMedicamento',         t:'INT',           pk:true},
-    {n:'Nombre',                 t:'VARCHAR(200)',  nn:true},
-    {n:'Presentacion',          t:'VARCHAR(100)'},
-    {n:'Concentracion',         t:'VARCHAR(50)'},
-    {n:'Laboratorio',           t:'VARCHAR(100)'},
-    {n:'Precio',                 t:'DECIMAL(10,2)', nn:true},
-    {n:'Stock',                  t:'INT',           nn:true},
-    {n:'Activo',                 t:'BIT',           nn:true},
-    {n:'FechaCreacion',         t:'DATETIME',      nn:true},
-    {n:'FechaModificacion',     t:'DATETIME'},
-    {n:'IdUsuarioCreacion',     t:'INT'},
-    {n:'IdUsuarioModificacion', t:'INT'},
+    {n:'IdUsuarioCreacion', t:'INT',            audit:true},
   ]},
 };
 
 const RELS = [
-  {from:'Usuario',        fc:'IdRol',           to:'Rol',           tc:'IdRol'},
-  {from:'Contacto',       fc:'IdUsuario',        to:'Usuario',       tc:'IdUsuario'},
-  {from:'Medico',         fc:'IdUsuario',        to:'Usuario',       tc:'IdUsuario'},
-  {from:'Paciente',       fc:'IdUsuario',        to:'Usuario',       tc:'IdUsuario'},
-  {from:'Paciente',       fc:'IdTipoAsegurado',  to:'TipoAsegurado', tc:'IdTipoAsegurado'},
-  {from:'Paciente',       fc:'IdEmpresa',        to:'Empresa',       tc:'IdEmpresa'},
-  {from:'Tarifa',         fc:'IdMedico',         to:'Medico',        tc:'IdMedico'},
-  {from:'Tarifa',         fc:'IdEspecialidad',   to:'Especialidad',  tc:'IdEspecialidad'},
-  {from:'HorarioMedico',  fc:'IdMedico',         to:'Medico',        tc:'IdMedico'},
-  {from:'HorarioMedico',  fc:'IdConsultorio',    to:'Consultorio',   tc:'IdConsultorio'},
-  {from:'Cita',           fc:'IdPaciente',       to:'Paciente',      tc:'IdPaciente'},
-  {from:'Cita',           fc:'IdMedico',         to:'Medico',        tc:'IdMedico'},
-  {from:'Cita',           fc:'IdEspecialidad',   to:'Especialidad',  tc:'IdEspecialidad'},
-  {from:'Cita',           fc:'IdTarifa',         to:'Tarifa',        tc:'IdTarifa'},
-  {from:'Cita',           fc:'IdEstadoCita',     to:'EstadoCita',    tc:'IdEstadoCita'},
-  {from:'Cita',           fc:'IdConsultorio',    to:'Consultorio',   tc:'IdConsultorio'},
-  {from:'Cita',           fc:'IdTipoConsulta',   to:'TipoConsulta',  tc:'IdTipoConsulta'},
-  {from:'CancelacionCita',fc:'IdCita',           to:'Cita',          tc:'IdCita'},
-  {from:'Seguro',         fc:'IdPaciente',       to:'Paciente',      tc:'IdPaciente'},
-  {from:'Comprobante',    fc:'IdCita',           to:'Cita',          tc:'IdCita'},
-  {from:'Pago',           fc:'IdComprobante',    to:'Comprobante',   tc:'IdComprobante'},
-  {from:'Pago',           fc:'IdMetodoPago',     to:'MetodoPago',    tc:'IdMetodoPago'},
-  {from:'Triaje',         fc:'IdCita',           to:'Cita',          tc:'IdCita'},
-  {from:'HistorialClinico',fc:'IdPaciente',      to:'Paciente',      tc:'IdPaciente'},
-  {from:'HistorialClinico',fc:'IdCita',          to:'Cita',          tc:'IdCita'},
-  {from:'Receta',         fc:'IdCita',           to:'Cita',          tc:'IdCita'},
-  {from:'ItemReceta',     fc:'IdReceta',         to:'Receta',        tc:'IdReceta'},
-  {from:'ItemReceta',     fc:'IdMedicamento',    to:'Medicamento',   tc:'IdMedicamento'},
+  // cardinalidad: '1N' = uno a muchos, '11' = uno a uno, 'NM' = many-to-many bridge
+  {from:'Usuario',         fc:'IdRol',          to:'Rol',            tc:'IdRol',          card:'N1'},
+  {from:'Contacto',        fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'N1'},
+  {from:'Medico',          fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'11'},
+  {from:'Paciente',        fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'11'},
+  {from:'Paciente',        fc:'IdTipoAsegurado', to:'TipoAsegurado',  tc:'IdTipoAsegurado',card:'N1'},
+  {from:'Paciente',        fc:'IdEmpresa',       to:'Empresa',        tc:'IdEmpresa',      card:'N1'},
+  {from:'Tarifa',          fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
+  {from:'Tarifa',          fc:'IdEspecialidad',  to:'Especialidad',   tc:'IdEspecialidad', card:'N1'},
+  {from:'HorarioMedico',   fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
+  {from:'HorarioMedico',   fc:'IdConsultorio',   to:'Consultorio',    tc:'IdConsultorio',  card:'N1'},
+  {from:'Cita',            fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
+  {from:'Cita',            fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
+  {from:'Cita',            fc:'IdEspecialidad',  to:'Especialidad',   tc:'IdEspecialidad', card:'N1'},
+  {from:'Cita',            fc:'IdTarifa',        to:'Tarifa',         tc:'IdTarifa',       card:'N1'},
+  {from:'Cita',            fc:'IdEstadoCita',    to:'EstadoCita',     tc:'IdEstadoCita',   card:'N1'},
+  {from:'Cita',            fc:'IdConsultorio',   to:'Consultorio',    tc:'IdConsultorio',  card:'N1'},
+  {from:'Cita',            fc:'IdTipoConsulta',  to:'TipoConsulta',   tc:'IdTipoConsulta', card:'N1'},
+  {from:'CancelacionCita', fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
+  {from:'Seguro',          fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
+  {from:'Comprobante',     fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
+  {from:'Pago',            fc:'IdComprobante',   to:'Comprobante',    tc:'IdComprobante',  card:'N1'},
+  {from:'Pago',            fc:'IdMetodoPago',    to:'MetodoPago',     tc:'IdMetodoPago',   card:'N1'},
+  {from:'Triaje',          fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
+  {from:'HistorialClinico',fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
+  {from:'HistorialClinico',fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'N1'},
+  {from:'Receta',          fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
+  {from:'ItemReceta',      fc:'IdReceta',        to:'Receta',         tc:'IdReceta',       card:'N1'},
+  {from:'ItemReceta',      fc:'IdMedicamento',   to:'Medicamento',    tc:'IdMedicamento',  card:'N1'},
 ];
 
-function tableHeight(t){ return HDR + t.cols.length * ROW; }
-function rowY(tbl, colName){
-  const idx = tbl.cols.findIndex(c=>c.n===colName);
-  return tbl.y + HDR + idx * ROW + ROW/2;
-}
+/* ═══════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════ */
+let scale=0.72, tx=0, ty=0;
+let panning=false, px=0, py=0;
+let dragging=null, dx=0, dy=0;
+let activeTable=null;
+let showAudit=true, showLines=true;
 
-function buildTables(){
-  const canvas = document.getElementById('canvas');
-  Object.entries(TABLES).forEach(([name, tbl])=>{
-    const div = document.createElement('div');
-    div.className='dbt'; div.id='tbl-'+name;
-    div.style.left=tbl.x+'px'; div.style.top=tbl.y+'px';
-    const hdr=document.createElement('div');
-    hdr.className='dbt-hdr'; hdr.style.background=tbl.color;
-    hdr.innerHTML=`<span style="font-size:11px">▦</span><span>${name}</span>`;
-    div.appendChild(hdr);
-    const cols=document.createElement('div'); cols.className='dbt-cols';
-    tbl.cols.forEach(col=>{
-      const row=document.createElement('div');
-      const cls=(col.pk&&col.fk)?'dbt-row pk fk':col.pk?'dbt-row pk':col.fk?'dbt-row fk':'dbt-row';
-      row.className=cls; row.id=`col-${name}-${col.n}`;
-      const icon=col.pk&&col.fk?'🔑🔗':col.pk?'🔑':col.fk?'🔗':'';
-      const tags=[col.pk?'<span class="col-tag tag-pk">PK</span>':'',col.fk?'<span class="col-tag tag-fk">FK</span>':'',col.uq?'<span class="col-tag tag-uq">UQ</span>':'',col.nn&&!col.pk?'<span class="col-tag tag-nn">NN</span>':''].join('');
-      row.innerHTML=`<span class="col-icon">${icon}</span><span class="col-name ${col.pk?'pk-name':''}" title="${col.n}">${col.n}</span><span class="col-type">${col.t}</span>${tags}`;
-      cols.appendChild(row);
-    });
-    div.appendChild(cols);
-    makeDraggable(div,name,tbl);
-    canvas.appendChild(div);
+const vp    = document.getElementById('viewport');
+const canvas= document.getElementById('canvas');
+const svg   = document.getElementById('svg-overlay');
+
+/* ─── Build DOM ──────────────────────────────────── */
+const els = {};
+for(const [name, tbl] of Object.entries(TABLES)){
+  const div = document.createElement('div');
+  div.className='dbt'; div.id='t_'+name;
+  div.style.left=tbl.x+'px'; div.style.top=tbl.y+'px';
+
+  const auditCount = tbl.cols.filter(c=>c.audit).length;
+  const totalCount = tbl.cols.length;
+
+  div.innerHTML=`
+    <div class="dbt-hdr" style="background:${tbl.color}">
+      <span class="tbl-name">${name}</span>
+      <span class="col-count">${totalCount} cols</span>
+    </div>
+    <div class="dbt-cols">
+      ${tbl.cols.map(c=>{
+        const cls=['dbt-row'];
+        if(c.pk)  cls.push('pk');
+        if(c.fk)  cls.push('fk');
+        if(c.audit) cls.push('audit');
+        const nameCls = c.pk?'col-name pk-name':(c.fk?'col-name fk-name':'col-name');
+        const icon = c.pk?'🔑':(c.fk?'🔗':'');
+        const tags = [
+          c.pk?'<span class="col-tag tag-pk">PK</span>':'',
+          c.fk?'<span class="col-tag tag-fk">FK</span>':'',
+          c.uq?'<span class="col-tag tag-uq">UQ</span>':'',
+          (c.nn&&!c.pk)?'<span class="col-tag tag-nn">NN</span>':'',
+        ].join('');
+        return `<div class="${cls.join(' ')}" data-col="${c.n}">
+          <span class="col-icon">${icon}</span>
+          <span class="${nameCls}">${c.n}</span>
+          <span class="col-type">${c.t}</span>
+          ${tags}
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Drag
+  div.addEventListener('mousedown', e=>{
+    if(e.button!==0) return;
+    const rect=div.getBoundingClientRect();
+    dx=e.clientX-rect.left; dy=e.clientY-rect.top;
+    dragging=div;
+    div.style.zIndex=50;
+    e.stopPropagation();
   });
-}
 
-function drawLines(){
-  const svg=document.getElementById('svg-overlay');
-  svg.innerHTML=`<defs><marker id="ae" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#888"/></marker></defs>`;
-  RELS.forEach(rel=>{
-    const ft=TABLES[rel.from], tt=TABLES[rel.to];
-    if(!ft||!tt) return;
-    const fd=document.getElementById('tbl-'+rel.from), td=document.getElementById('tbl-'+rel.to);
-    if(!fd||!td) return;
-    const fx=parseInt(fd.style.left), fy2=parseInt(fd.style.top);
-    const tx2=parseInt(td.style.left), ty2=parseInt(td.style.top);
-    const fyd=rowY({...ft,x:fx,y:fy2},rel.fc);
-    const tyd=rowY({...tt,x:tx2,y:ty2},rel.tc);
-    const fcx=fx+W/2, tcx=tx2+W/2;
-    let x1,x2,cx1,cx2;
-    if(fcx<=tcx){x1=fx+W;x2=tx2;const g=Math.max(40,Math.abs(x2-x1)*0.4);cx1=x1+g;cx2=x2-g;}
-    else{x1=fx;x2=tx2+W;const g=Math.max(40,Math.abs(x1-x2)*0.4);cx1=x1-g;cx2=x2+g;}
-    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.setAttribute('d',`M${x1},${fyd} C${cx1},${fyd} ${cx2},${tyd} ${x2},${tyd}`);
-    p.setAttribute('stroke',ft.color); p.setAttribute('stroke-width','1.5');
-    p.setAttribute('fill','none'); p.setAttribute('opacity','0.65');
-    p.setAttribute('marker-end','url(#ae)');
-    const ti=document.createElementNS('http://www.w3.org/2000/svg','title');
-    ti.textContent=`${rel.from}.${rel.fc} → ${rel.to}.${rel.tc}`; p.appendChild(ti);
-    const t1=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t1.setAttribute('x',x2+(fcx<=tcx?-14:8)); t1.setAttribute('y',tyd-3);
-    t1.setAttribute('fill',ft.color); t1.setAttribute('font-size','10'); t1.setAttribute('font-weight','700'); t1.textContent='1';
-    const tN=document.createElementNS('http://www.w3.org/2000/svg','text');
-    tN.setAttribute('x',x1+(fcx<=tcx?4:-12)); tN.setAttribute('y',fyd-3);
-    tN.setAttribute('fill',ft.color); tN.setAttribute('font-size','10'); tN.setAttribute('font-weight','700'); tN.textContent='N';
-    svg.appendChild(p); svg.appendChild(t1); svg.appendChild(tN);
+  // Click to highlight
+  div.addEventListener('click', e=>{
+    e.stopPropagation();
+    highlightTable(name);
   });
+
+  canvas.appendChild(div);
+  els[name]=div;
 }
 
-function makeDraggable(el,name,tblData){
-  let sx,sy,sl,st;
-  el.addEventListener('mousedown',e=>{
-    if(e.ctrlKey) return; e.stopPropagation();
-    sx=e.clientX; sy=e.clientY; sl=parseInt(el.style.left)||tblData.x; st=parseInt(el.style.top)||tblData.y;
-    const onMove=e=>{const sc=currentScale; el.style.left=(sl+(e.clientX-sx)/sc)+'px'; el.style.top=(st+(e.clientY-sy)/sc)+'px'; TABLES[name].x=parseInt(el.style.left); TABLES[name].y=parseInt(el.style.top); drawLines();};
-    const onUp=()=>{document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);};
-    document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
-  });
-  el.addEventListener('click',()=>highlightTable(name));
-}
-
-const vp=document.getElementById('viewport');
-let tx=0,ty=0,currentScale=0.65;
-function applyTransform(){document.getElementById('canvas').style.transform=`translate(${tx}px,${ty}px) scale(${currentScale})`; document.getElementById('canvas').style.transformOrigin='0 0';}
-vp.addEventListener('mousedown',e=>{
-  if(!e.ctrlKey&&e.target!==vp&&e.target.id!=='canvas'&&e.target.id!=='svg-overlay') return;
-  const ps={x:e.clientX-tx,y:e.clientY-ty};
-  const m=e2=>{tx=e2.clientX-ps.x; ty=e2.clientY-ps.y; applyTransform();};
-  const u=()=>{document.removeEventListener('mousemove',m); document.removeEventListener('mouseup',u);};
-  document.addEventListener('mousemove',m); document.addEventListener('mouseup',u);
+/* ─── Drag & Pan ─────────────────────────────────── */
+vp.addEventListener('mousedown', e=>{
+  if(e.button!==0||dragging) return;
+  panning=true; px=e.clientX-tx; py=e.clientY-ty;
+  vp.classList.add('panning');
 });
-vp.addEventListener('wheel',e=>{
+window.addEventListener('mousemove', e=>{
+  if(dragging){
+    const cx=(e.clientX-dx-vp.getBoundingClientRect().left-tx)/scale;
+    const cy=(e.clientY-dy-vp.getBoundingClientRect().top -ty)/scale;
+    dragging.style.left=Math.max(0,cx)+'px';
+    dragging.style.top =Math.max(0,cy)+'px';
+    drawLines();
+  } else if(panning){
+    tx=e.clientX-px; ty=e.clientY-py;
+    applyTransform();
+  }
+});
+window.addEventListener('mouseup', ()=>{
+  if(dragging){dragging.style.zIndex=10; dragging=null;}
+  panning=false; vp.classList.remove('panning');
+});
+vp.addEventListener('wheel', e=>{
   e.preventDefault();
-  const d=e.deltaY>0?0.9:1.1, r=vp.getBoundingClientRect();
-  tx=e.clientX-r.left-(e.clientX-r.left-tx)*d; ty=e.clientY-r.top-(e.clientY-r.top-ty)*d;
-  currentScale=Math.min(Math.max(currentScale*d,0.2),3); applyTransform();
+  zoom(e.deltaY<0?1.1:0.9, e.clientX, e.clientY);
 },{passive:false});
-function zoom(f){currentScale=Math.min(Math.max(currentScale*f,0.2),3); applyTransform();}
-function resetView(){tx=0;ty=0;currentScale=0.65;applyTransform();}
+canvas.addEventListener('click', ()=>{ clearHighlight(); });
+
+/* ─── Transform ──────────────────────────────────── */
+function applyTransform(){
+  canvas.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  canvas.style.transformOrigin='0 0';
+  document.getElementById('zoomLabel').textContent=Math.round(scale*100)+'%';
+}
+function zoom(factor, cx, cy){
+  const rect=vp.getBoundingClientRect();
+  const mx=(cx||rect.left+rect.width/2)-rect.left;
+  const my=(cy||rect.top+rect.height/2)-rect.top;
+  tx=mx-(mx-tx)*factor; ty=my-(my-ty)*factor;
+  scale=Math.max(0.2,Math.min(3,scale*factor));
+  applyTransform(); drawLines();
+}
+function resetView(){ scale=0.72; tx=0; ty=0; applyTransform(); drawLines(); }
 function fitAll(){
-  let mnX=Infinity,mnY=Infinity,mxX=-Infinity,mxY=-Infinity;
-  Object.values(TABLES).forEach(t=>{mnX=Math.min(mnX,t.x);mnY=Math.min(mnY,t.y);mxX=Math.max(mxX,t.x+W);mxY=Math.max(mxY,t.y+tableHeight(t));});
-  const sc=Math.min((vp.clientWidth-40)/(mxX-mnX),(vp.clientHeight-40)/(mxY-mnY),1);
-  currentScale=sc; tx=20-mnX*sc; ty=20-mnY*sc; applyTransform();
+  const xs=Object.values(TABLES).map(t=>t.x);
+  const ys=Object.values(TABLES).map(t=>t.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs)+W;
+  const minY=Math.min(...ys), maxY=Math.max(...ys)+300;
+  const vw=vp.clientWidth, vh=vp.clientHeight;
+  scale=Math.min((vw/(maxX-minX)),(vh/(maxY-minY)))*0.9;
+  tx=(vw-( maxX-minX)*scale)/2-minX*scale;
+  ty=(vh-(maxY-minY)*scale)/2-minY*scale;
+  applyTransform(); drawLines();
 }
 
-let lastHL=null;
+/* ─── Highlight ──────────────────────────────────── */
 function highlightTable(name){
-  if(lastHL===name){document.querySelectorAll('.dbt').forEach(d=>d.classList.remove('highlighted'));lastHL=null;drawLines();return;}
-  lastHL=name;
-  document.querySelectorAll('.dbt').forEach(d=>d.classList.remove('highlighted'));
+  clearHighlight();
+  activeTable=name;
+  document.getElementById('activeTable').textContent=name;
   const related=new Set([name]);
-  RELS.forEach(r=>{if(r.from===name)related.add(r.to);if(r.to===name)related.add(r.from);});
-  related.forEach(n=>document.getElementById('tbl-'+n)?.classList.add('highlighted'));
-  const svg=document.getElementById('svg-overlay');
-  svg.innerHTML=`<defs><marker id="ae" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#888"/></marker></defs>`;
-  RELS.forEach(rel=>{
-    const active=rel.from===name||rel.to===name;
-    const ft=TABLES[rel.from],tt=TABLES[rel.to];
-    if(!ft||!tt) return;
-    const fd=document.getElementById('tbl-'+rel.from),td=document.getElementById('tbl-'+rel.to);
-    if(!fd||!td) return;
-    const fx=parseInt(fd.style.left),fy2=parseInt(fd.style.top),tx2=parseInt(td.style.left),ty2=parseInt(td.style.top);
-    const fyd=rowY({...ft,x:fx,y:fy2},rel.fc),tyd=rowY({...tt,x:tx2,y:ty2},rel.tc);
-    const fcx=fx+W/2,tcx=tx2+W/2;
-    let x1,x2,cx1,cx2;
-    if(fcx<=tcx){x1=fx+W;x2=tx2;const g=Math.max(40,Math.abs(x2-x1)*0.4);cx1=x1+g;cx2=x2-g;}
-    else{x1=fx;x2=tx2+W;const g=Math.max(40,Math.abs(x1-x2)*0.4);cx1=x1-g;cx2=x2+g;}
-    const color=active?ft.color:'#444',op=active?'0.9':'0.15',sw=active?'2':'1';
-    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.setAttribute('d',`M${x1},${fyd} C${cx1},${fyd} ${cx2},${tyd} ${x2},${tyd}`);
-    p.setAttribute('stroke',color); p.setAttribute('stroke-width',sw); p.setAttribute('fill','none'); p.setAttribute('opacity',op);
-    if(active) p.setAttribute('marker-end','url(#ae)');
-    svg.appendChild(p);
-    if(active){
-      [['1',x2+(fcx<=tcx?-14:8),tyd],['N',x1+(fcx<=tcx?4:-12),fyd]].forEach(([lbl,lx,ly])=>{
-        const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-        t.setAttribute('x',lx); t.setAttribute('y',ly-3); t.setAttribute('fill',color);
-        t.setAttribute('font-size','11'); t.setAttribute('font-weight','700'); t.textContent=lbl; svg.appendChild(t);
-      });
-    }
+  RELS.forEach(r=>{ if(r.from===name) related.add(r.to); if(r.to===name) related.add(r.from); });
+  for(const [n,el] of Object.entries(els)){
+    if(related.has(n)) el.classList.add('highlighted');
+    else el.classList.add('dimmed');
+  }
+  drawLines();
+}
+function clearHighlight(){
+  activeTable=null;
+  document.getElementById('activeTable').textContent='—';
+  for(const el of Object.values(els)) { el.classList.remove('highlighted','dimmed'); }
+  drawLines();
+}
+
+/* ─── Lines ──────────────────────────────────────── */
+function getCenter(name){
+  const el=els[name];
+  const x=parseFloat(el.style.left)||0;
+  const y=parseFloat(el.style.top )||0;
+  const h=el.offsetHeight;
+  return { x:x+W/2, y:y+h/2, top:{x:x+W/2,y}, bot:{x:x+W/2,y:y+h},
+           left:{x,y:y+h/2}, right:{x:x+W,y:y+h/2} };
+}
+function closestEdge(from,to){
+  const fc=getCenter(from), tc=getCenter(to);
+  const dx=tc.x-fc.x, dy=tc.y-fc.y;
+  if(Math.abs(dx)>Math.abs(dy)){
+    return dx>0? {s:fc.right,e:tc.left} : {s:fc.left,e:tc.right};
+  } else {
+    return dy>0? {s:fc.bot,e:tc.top}   : {s:fc.top,e:tc.bot};
+  }
+}
+function drawLines(){
+  if(!showLines){ svg.innerHTML=''; return; }
+  svg.innerHTML='';
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  // arrowheads
+  ['#4d9ff0','#f59e0b','#6b7280'].forEach((col,i)=>{
+    const m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    m.setAttribute('id','arr'+i); m.setAttribute('markerWidth','7');
+    m.setAttribute('markerHeight','7'); m.setAttribute('refX','6');
+    m.setAttribute('refY','3.5'); m.setAttribute('orient','auto');
+    const p=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    p.setAttribute('points','0 0, 7 3.5, 0 7'); p.setAttribute('fill',col);
+    m.appendChild(p); defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  RELS.forEach((r,i)=>{
+    const fromEl=els[r.from], toEl=els[r.to];
+    if(!fromEl||!toEl) return;
+    const isActive = activeTable && (r.from===activeTable||r.to===activeTable);
+    const isInactive= activeTable && !isActive;
+    if(isInactive) return;
+
+    const {s,e}=closestEdge(r.from,r.to);
+    const col = isActive?'#f59e0b': (r.card==='11'?'#6b7280':'#3d6fa8');
+    const arrIdx = isActive?1: (r.card==='11'?2:0);
+    const sw = isActive?2:1.2;
+
+    const cx1=(s.x+e.x)/2, cy1=s.y, cx2=(s.x+e.x)/2, cy2=e.y;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${s.x},${s.y} C${cx1},${cy1} ${cx2},${cy2} ${e.x},${e.y}`);
+    path.setAttribute('stroke',col); path.setAttribute('stroke-width',sw);
+    path.setAttribute('fill','none'); path.setAttribute('opacity', isActive?'0.9':'0.45');
+    path.setAttribute('marker-end',`url(#arr${arrIdx})`);
+    svg.appendChild(path);
+
+    // Cardinality label
+    const mx=(s.x+e.x)/2+2, my=(s.y+e.y)/2-4;
+    const cardText = r.card==='11'?'1:1': (r.card==='N1'?'N:1':'M:N');
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',mx); t.setAttribute('y',my);
+    t.setAttribute('fill',isActive?'#f59e0b':'#4d5568');
+    t.setAttribute('font-size','9'); t.setAttribute('font-family','Segoe UI');
+    t.setAttribute('text-anchor','middle'); t.setAttribute('opacity',isActive?'1':'0.6');
+    t.textContent=cardText;
+    svg.appendChild(t);
   });
 }
 
-function searchTable(val){
-  const q=val.trim().toLowerCase();
-  document.querySelectorAll('.dbt').forEach(d=>d.style.outline='');
-  if(!q) return;
-  Object.keys(TABLES).forEach(name=>{
-    const el=document.getElementById('tbl-'+name);
-    if(!el) return;
-    if(name.toLowerCase().includes(q)){
-      el.style.outline='3px solid #f59e0b';
-      tx=vp.clientWidth/2-TABLES[name].x*currentScale-W*currentScale/2;
-      ty=vp.clientHeight/2-TABLES[name].y*currentScale-80*currentScale;
-      applyTransform();
-    }
-  });
+/* ─── Search ──────────────────────────────────────── */
+function searchTable(q){
+  if(!q){ for(const el of Object.values(els)) el.classList.remove('highlighted','dimmed'); drawLines(); return; }
+  const lq=q.toLowerCase();
+  for(const [n,el] of Object.entries(els)){
+    if(n.toLowerCase().includes(lq)) el.classList.remove('dimmed'), el.classList.add('highlighted');
+    else el.classList.add('dimmed'), el.classList.remove('highlighted');
+  }
+  drawLines();
 }
 
-buildTables(); drawLines(); applyTransform();
+/* ─── Toggle audit cols ──────────────────────────── */
+function toggleAudit(){
+  showAudit=!showAudit;
+  document.getElementById('btnAudit').classList.toggle('active',!showAudit);
+  document.querySelectorAll('.dbt-row.audit').forEach(row=>{
+    row.classList.toggle('hidden',!showAudit);
+  });
+  drawLines();
+}
+function toggleLines(){
+  showLines=!showLines;
+  document.getElementById('btnLines').classList.toggle('active',!showLines);
+  drawLines();
+}
+
+/* ─── Init ───────────────────────────────────────── */
+applyTransform();
+drawLines();
+window.addEventListener('resize', ()=>drawLines());
 </script>
 </body>
 </html>
