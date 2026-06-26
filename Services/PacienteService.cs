@@ -53,7 +53,7 @@ public class PacienteService : IPacienteService
 
     public PacienteResponseDto Crear(PacienteCreateDto dto)
     {
-        if (_db.Usuarios.Any(u => u.DNI == dto.Dni))
+        if (_db.Usuarios.Any(u => u.NumeroDocumento == dto.Dni))
             throw new BusinessException($"Ya existe un paciente con el DNI {dto.Dni}");
 
         var usuario = new Usuario
@@ -61,7 +61,8 @@ public class PacienteService : IPacienteService
             IdRol = 3,
             Nombres = dto.Nombre,
             Apellidos = dto.Apellido,
-            DNI = dto.Dni,
+            TipoDocumento = "DNI",
+            NumeroDocumento = dto.Dni,
             FechaNacimiento = dto.FechaNacimiento,
             Username = dto.Dni,
             PasswordHash = BCryptHash(dto.Dni),
@@ -94,12 +95,12 @@ public class PacienteService : IPacienteService
         var paciente = _db.Pacientes.Include(p => p.Usuario).FirstOrDefault(p => p.IdPaciente == id)
             ?? throw new NotFoundException($"Paciente con ID {id} no encontrado");
 
-        if (_db.Usuarios.Any(u => u.DNI == dto.Dni && u.IdUsuario != paciente.IdUsuario))
+        if (_db.Usuarios.Any(u => u.NumeroDocumento == dto.Dni && u.IdUsuario != paciente.IdUsuario))
             throw new BusinessException($"Ya existe otro paciente con el DNI {dto.Dni}");
 
         paciente.Usuario!.Nombres = dto.Nombre;
         paciente.Usuario.Apellidos = dto.Apellido;
-        paciente.Usuario.DNI = dto.Dni;
+        paciente.Usuario.NumeroDocumento = dto.Dni;
         paciente.Usuario.FechaNacimiento = dto.FechaNacimiento;
         paciente.Usuario.FechaModificacion = DateTime.Now;
         paciente.GrupoSanguineo = dto.GrupoSanguineo;
@@ -135,7 +136,7 @@ public class PacienteService : IPacienteService
         Id = p.IdPaciente,
         Nombre = p.Usuario?.Nombres ?? string.Empty,
         Apellido = p.Usuario?.Apellidos ?? string.Empty,
-        Dni = p.Usuario?.DNI ?? string.Empty,
+        Dni = p.Usuario?.NumeroDocumento ?? string.Empty,
         Telefono = contactos.FirstOrDefault(c => c.TipoContacto == "Telefono")?.Valor ?? string.Empty,
         Email = contactos.FirstOrDefault(c => c.TipoContacto == "Email")?.Valor ?? string.Empty,
         FechaNacimiento = p.Usuario?.FechaNacimiento ?? DateTime.MinValue,

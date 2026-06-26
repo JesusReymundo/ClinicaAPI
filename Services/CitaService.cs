@@ -13,22 +13,19 @@ public class CitaService : ICitaService
 
     public CitaService(ClinicaDbContext db) => _db = db;
 
-    public IEnumerable<CitaResponseDto> ObtenerTodas() =>
+    private IQueryable<Cita> CitasConIncludes() =>
         _db.Citas
             .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
             .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
-            .AsNoTracking()
-            .Select(MapToDto)
-            .ToList();
+            .Include(c => c.EspecialidadNav)
+            .AsNoTracking();
+
+    public IEnumerable<CitaResponseDto> ObtenerTodas() =>
+        CitasConIncludes().Select(MapToDto).ToList();
 
     public CitaResponseDto ObtenerPorId(int id)
     {
-        var cita = _db.Citas
-            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
-            .AsNoTracking()
+        var cita = CitasConIncludes()
             .FirstOrDefault(c => c.Id == id)
             ?? throw new NotFoundException($"Cita con ID {id} no encontrada");
         return MapToDto(cita);
@@ -38,12 +35,8 @@ public class CitaService : ICitaService
     {
         if (!_db.Pacientes.Any(p => p.IdPaciente == pacienteId))
             throw new NotFoundException($"Paciente con ID {pacienteId} no encontrado");
-        return _db.Citas
-            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+        return CitasConIncludes()
             .Where(c => c.PacienteId == pacienteId)
-            .AsNoTracking()
             .Select(MapToDto)
             .ToList();
     }
@@ -52,23 +45,15 @@ public class CitaService : ICitaService
     {
         if (!_db.Medicos.Any(m => m.IdMedico == medicoId))
             throw new NotFoundException($"Médico con ID {medicoId} no encontrado");
-        return _db.Citas
-            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+        return CitasConIncludes()
             .Where(c => c.MedicoId == medicoId)
-            .AsNoTracking()
             .Select(MapToDto)
             .ToList();
     }
 
     public IEnumerable<CitaResponseDto> ObtenerPorEstado(EstadoCita estado) =>
-        _db.Citas
-            .Include(c => c.Paciente).ThenInclude(p => p!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.Usuario)
-            .Include(c => c.MedicoNav).ThenInclude(m => m!.EspecialidadNav)
+        CitasConIncludes()
             .Where(c => c.IdEstado == (int)estado)
-            .AsNoTracking()
             .Select(MapToDto)
             .ToList();
 
@@ -89,10 +74,18 @@ public class CitaService : ICitaService
         if (conflicto)
             throw new BusinessException("El médico ya tiene una cita en ese horario (margen de 30 minutos)");
 
+        var idEspecialidad = _db.Tarifas
+            .Where(t => t.IdMedico == dto.MedicoId && t.Activo)
+            .Select(t => t.IdEspecialidad)
+            .FirstOrDefault();
+        if (idEspecialidad == 0)
+            throw new BusinessException("El médico no tiene especialidad configurada");
+
         var cita = new Cita
         {
             PacienteId = dto.PacienteId,
             MedicoId = dto.MedicoId,
+            IdEspecialidad = idEspecialidad,
             FechaHora = dto.FechaHora,
             Motivo = dto.Motivo,
             Observaciones = dto.Observaciones,
@@ -180,7 +173,7 @@ public class CitaService : ICitaService
         MedicoId = c.MedicoId,
         NombreMedico = c.MedicoNav?.Usuario != null
             ? $"Dr. {c.MedicoNav.Usuario.Nombres} {c.MedicoNav.Usuario.Apellidos}" : "Desconocido",
-        EspecialidadMedico = c.MedicoNav?.EspecialidadNav?.Nombre ?? string.Empty,
+        EspecialidadMedico = c.EspecialidadNav?.Nombre ?? string.Empty,
         FechaHora = c.FechaHora,
         Motivo = c.Motivo,
         Estado = c.Estado,

@@ -20,7 +20,7 @@ public class Receta
     public ICollection<DetalleReceta> Detalles { get; set; } = new List<DetalleReceta>();
 }
 
-[Table("DetalleReceta")]
+[Table("ItemReceta")]
 public class DetalleReceta
 {
     [Key]
