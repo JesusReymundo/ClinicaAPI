@@ -23,6 +23,11 @@ public class Factura   // Clase mantenida como Factura para no romper referencia
     public decimal Total { get; set; }
     [MaxLength(20)]
     public string EstadoPago { get; set; } = "Pendiente";
+    [MaxLength(50)]
+    public string? MetodoPago { get; set; }
+    [MaxLength(50)]
+    public string? NroOperacion { get; set; }
+    public DateTime? FechaPago { get; set; }
     public DateTime FechaEmision { get; set; } = DateTime.Now;
     public int? IdUsuarioCreacion { get; set; }
     public int? IdUsuarioModificacion { get; set; }

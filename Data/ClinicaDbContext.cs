@@ -20,10 +20,14 @@ public class ClinicaDbContext : DbContext
 
     // Médicos
     public DbSet<Medico> Medicos { get; set; }
+    public DbSet<ColegioMedico> ColegiosMedico { get; set; }
+    public DbSet<MedicoEspecialidad> MedicoEspecialidades { get; set; }
     public DbSet<Tarifa> Tarifas { get; set; }
 
     // Pacientes
     public DbSet<Paciente> Pacientes { get; set; }
+    public DbSet<Seguro> Seguros { get; set; }
+    public DbSet<PacienteSeguro> PacienteSeguros { get; set; }
 
     // Citas
     public DbSet<Cita> Citas { get; set; }

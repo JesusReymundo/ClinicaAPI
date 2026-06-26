@@ -11,8 +11,6 @@ public class Paciente
     public int IdUsuario { get; set; }
     public int IdTipoAsegurado { get; set; }
     public int? IdEmpresa { get; set; }
-    [MaxLength(50)]
-    public string? NumeroSeguro { get; set; }
     [MaxLength(5)]
     public string? GrupoSanguineo { get; set; }
     [MaxLength(500)]

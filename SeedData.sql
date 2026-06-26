@@ -8,32 +8,36 @@ GO
 -- LIMPIEZA — desactivar FK, vaciar tablas, resetear IDs
 -- ============================================================
 ALTER TABLE CancelacionCita  NOCHECK CONSTRAINT ALL;
-ALTER TABLE Pago              NOCHECK CONSTRAINT ALL;
 ALTER TABLE Comprobante       NOCHECK CONSTRAINT ALL;
 ALTER TABLE ItemReceta        NOCHECK CONSTRAINT ALL;
 ALTER TABLE Receta            NOCHECK CONSTRAINT ALL;
 ALTER TABLE HistorialClinico  NOCHECK CONSTRAINT ALL;
 ALTER TABLE Triaje            NOCHECK CONSTRAINT ALL;
+ALTER TABLE PacienteSeguro    NOCHECK CONSTRAINT ALL;
 ALTER TABLE Seguro            NOCHECK CONSTRAINT ALL;
 ALTER TABLE Cita              NOCHECK CONSTRAINT ALL;
 ALTER TABLE HorarioMedico     NOCHECK CONSTRAINT ALL;
 ALTER TABLE Tarifa            NOCHECK CONSTRAINT ALL;
+ALTER TABLE MedicoEspecialidad NOCHECK CONSTRAINT ALL;
+ALTER TABLE ColegioMedico     NOCHECK CONSTRAINT ALL;
 ALTER TABLE Paciente          NOCHECK CONSTRAINT ALL;
 ALTER TABLE Medico            NOCHECK CONSTRAINT ALL;
 ALTER TABLE Contacto          NOCHECK CONSTRAINT ALL;
 ALTER TABLE Usuario           NOCHECK CONSTRAINT ALL;
 
 DELETE FROM CancelacionCita;
-DELETE FROM Pago;
 DELETE FROM Comprobante;
 DELETE FROM ItemReceta;
 DELETE FROM Receta;
 DELETE FROM HistorialClinico;
 DELETE FROM Triaje;
+DELETE FROM PacienteSeguro;
 DELETE FROM Seguro;
 DELETE FROM Cita;
 DELETE FROM HorarioMedico;
 DELETE FROM Tarifa;
+DELETE FROM MedicoEspecialidad;
+DELETE FROM ColegioMedico;
 DELETE FROM Paciente;
 DELETE FROM Medico;
 DELETE FROM Contacto;
@@ -41,37 +45,37 @@ DELETE FROM Usuario;
 DELETE FROM Consultorio;
 DELETE FROM TipoConsulta;
 DELETE FROM EstadoCita;
-DELETE FROM MetodoPago;
 DELETE FROM Medicamento;
 DELETE FROM Especialidad;
 DELETE FROM TipoAsegurado;
 DELETE FROM Empresa;
 DELETE FROM Rol;
 
-DBCC CHECKIDENT ('Rol',              RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Usuario',          RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Contacto',         RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Empresa',          RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('TipoAsegurado',    RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Especialidad',     RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Medico',           RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Tarifa',           RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Paciente',         RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('EstadoCita',       RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Cita',             RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Medicamento',      RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Receta',           RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('ItemReceta',       RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Comprobante',      RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('MetodoPago',       RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Pago',             RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('HorarioMedico',    RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Triaje',           RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('HistorialClinico', RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Seguro',           RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('CancelacionCita',  RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('Consultorio',      RESEED, 0) WITH NO_INFOMSGS;
-DBCC CHECKIDENT ('TipoConsulta',     RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Rol',               RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Usuario',           RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Contacto',          RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Empresa',           RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('TipoAsegurado',     RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Especialidad',      RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Medico',            RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('ColegioMedico',     RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('MedicoEspecialidad',RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Tarifa',            RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Paciente',          RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Seguro',            RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('PacienteSeguro',    RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('EstadoCita',        RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Cita',              RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Medicamento',       RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Receta',            RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('ItemReceta',        RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Comprobante',       RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('HorarioMedico',     RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Triaje',            RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('HistorialClinico',  RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('CancelacionCita',   RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('Consultorio',       RESEED, 0) WITH NO_INFOMSGS;
+DBCC CHECKIDENT ('TipoConsulta',      RESEED, 0) WITH NO_INFOMSGS;
 PRINT '=== Limpieza completada ===';
 GO
 
@@ -107,8 +111,7 @@ INSERT INTO Especialidad (Nombre, Descripcion) VALUES
 INSERT INTO EstadoCita (Nombre) VALUES
 ('Pendiente'),('Confirmada'),('Cancelada'),('Completada'),('Anulada');
 
-INSERT INTO MetodoPago (Nombre) VALUES
-('Efectivo'),('Tarjeta de Credito'),('Transferencia Bancaria'),('Seguro Medico'),('Yape/Plin');
+-- MetodoPago eliminado (obs. profesor) — el método se registra en Comprobante.MetodoPago
 
 INSERT INTO TipoConsulta (Nombre, Descripcion, TarifaExtra) VALUES
 ('Primera Vez', 'Consulta inicial',        0.00),
@@ -293,11 +296,21 @@ GO
 -- ============================================================
 -- SECCIÓN 4: MÉDICOS (28) + TARIFAS
 -- ============================================================
-INSERT INTO Medico (IdUsuario, ColegioMedico, Activo)
-SELECT IdUsuario,
-       'CMP-' + RIGHT('000000' + CAST(ROW_NUMBER() OVER (ORDER BY IdUsuario) + 98999 AS VARCHAR(6)), 6),
-       1
+INSERT INTO Medico (IdUsuario, Activo)
+SELECT IdUsuario, 1
 FROM Usuario WHERE IdRol = 2;
+
+-- Cada médico con su número de colegio (obs. profesor: tabla propia para múltiples colegios)
+INSERT INTO ColegioMedico (IdMedico, Numero, Activo)
+SELECT IdMedico,
+       'CMP-' + RIGHT('000000' + CAST(ROW_NUMBER() OVER (ORDER BY IdMedico) + 98999 AS VARCHAR(6)), 6),
+       1
+FROM Medico;
+
+-- Relación directa Médico-Especialidad (obs. profesor)
+INSERT INTO MedicoEspecialidad (IdMedico, IdEspecialidad, Activo)
+SELECT m.IdMedico, ((m.IdMedico - 1) % 15) + 1, 1
+FROM Medico m;
 
 INSERT INTO Tarifa (IdMedico, IdEspecialidad, Monto, Descripcion, Activo)
 SELECT
@@ -336,7 +349,7 @@ GO
 -- ============================================================
 -- SECCIÓN 6: PACIENTES (SET-based)
 -- ============================================================
-INSERT INTO Paciente (IdUsuario, IdTipoAsegurado, IdEmpresa, NumeroSeguro, GrupoSanguineo)
+INSERT INTO Paciente (IdUsuario, IdTipoAsegurado, IdEmpresa, GrupoSanguineo)
 SELECT
     u.IdUsuario,
     CASE
@@ -346,32 +359,49 @@ SELECT
         ELSE 4
     END,
     CASE WHEN u.IdUsuario BETWEEN 51 AND 75 THEN ((u.IdUsuario - 51) % 10) + 1 ELSE NULL END,
-    CASE
-        WHEN u.IdUsuario BETWEEN 31 AND 50 THEN 'ES-'   + RIGHT('000000' + CAST(u.IdUsuario AS VARCHAR), 6)
-        WHEN u.IdUsuario BETWEEN 51 AND 75 THEN 'CORP-' + RIGHT('000000' + CAST(u.IdUsuario AS VARCHAR), 6)
-        WHEN u.IdUsuario > 75              THEN 'SIS-'  + RIGHT('000000' + CAST(u.IdUsuario AS VARCHAR), 6)
-        ELSE NULL
-    END,
     CHOOSE((u.IdUsuario % 8) + 1, 'O+','A+','B+','AB+','O-','A-','B-','AB-')
 FROM Usuario u;
 PRINT '=== Pacientes insertados ===';
 GO
 
 -- ============================================================
--- SECCIÓN 7: SEGUROS (SET-based)
+-- SECCIÓN 7: SEGUROS catálogo + PacienteSeguro (obs. profesor)
 -- ============================================================
-INSERT INTO Seguro (IdPaciente, NombreSeguro, NumeroPoliza, FechaVigencia, FechaVencimiento, CoberturaMax, Activo)
+INSERT INTO Seguro (NombreSeguro, TipoCobertura, Descripcion, Activo) VALUES
+('EsSalud',        'EsSalud',    'Seguro Social de Salud del Peru',       1),
+('SIS',            'SIS',        'Seguro Integral de Salud',              1),
+('Rimac Seguros',  'Privado',    'Plan de salud corporativo Rimac',       1),
+('Pacifico Salud', 'Privado',    'Plan de salud corporativo Pacifico',    1),
+('La Positiva',    'Privado',    'Plan de salud La Positiva',             1),
+('Mapfre Salud',   'Privado',    'Plan de salud Mapfre',                  1),
+('Particular',     'Particular', 'Pago particular sin seguro',            1);
+
+-- Tabla intermedia: cada paciente puede tener mas de un seguro activo
+INSERT INTO PacienteSeguro (IdPaciente, IdSeguro, NumeroPoliza, FechaAfiliacion, FechaVencimiento, CoberturaMax, EsActivo)
 SELECT
     p.IdPaciente,
-    CHOOSE((p.IdPaciente % 5) + 1, 'EsSalud','Rimac Seguros','Pacifico Salud','La Positiva','Mapfre Salud'),
+    (p.IdPaciente % 6) + 1,
     'POL-' + RIGHT('0000000' + CAST(p.IdPaciente * 1234 AS VARCHAR(8)), 7),
-    DATEADD(YEAR, 1, GETDATE()),
-    DATEADD(YEAR, 2, GETDATE()),
+    DATEADD(YEAR, -1, GETDATE()),
+    DATEADD(YEAR,  1, GETDATE()),
     CAST(((p.IdPaciente % 5) + 1) * 5000 AS DECIMAL(10,2)),
     1
+FROM Paciente p;
+
+-- Algunos pacientes con seguro adicional (historial)
+INSERT INTO PacienteSeguro (IdPaciente, IdSeguro, NumeroPoliza, FechaAfiliacion, FechaVencimiento, CoberturaMax, EsActivo)
+SELECT
+    p.IdPaciente,
+    7,  -- Particular
+    NULL,
+    DATEADD(YEAR, -3, GETDATE()),
+    DATEADD(YEAR, -1, GETDATE()),
+    NULL,
+    0   -- vencido (historial)
 FROM Paciente p
-WHERE p.IdPaciente BETWEEN 31 AND 90;
-PRINT '=== Seguros insertados ===';
+WHERE p.IdPaciente % 4 = 0;
+
+PRINT '=== Seguros y PacienteSeguro insertados ===';
 GO
 
 -- ============================================================
@@ -590,7 +620,8 @@ GO
 -- ============================================================
 -- SECCIÓN 13: COMPROBANTES
 -- ============================================================
-INSERT INTO Comprobante (IdCita, TipoComprobante, Serie, Numero, Subtotal, IGV, Total, EstadoPago, FechaEmision)
+INSERT INTO Comprobante (IdCita, TipoComprobante, Serie, Numero, Subtotal, IGV, Total,
+                         EstadoPago, MetodoPago, NroOperacion, FechaPago, FechaEmision)
 SELECT
     c.IdCita,
     CASE p.IdTipoAsegurado WHEN 2 THEN 'Factura' ELSE 'Boleta' END,
@@ -601,51 +632,41 @@ SELECT
     ROUND(ISNULL(t.Monto, 100.00) * 0.18, 2),
     ROUND(ISNULL(t.Monto, 100.00) * 1.18, 2),
     CASE WHEN c.IdCita % 10 = 0 THEN 'Pendiente' ELSE 'Pagado' END,
+    CHOOSE((c.IdCita % 5) + 1, 'Efectivo','Tarjeta','Transferencia','Seguro Medico','Yape/Plin'),
+    CASE (c.IdCita % 5) + 1
+        WHEN 3 THEN 'TRF-' + RIGHT('000000' + CAST(c.IdCita * 7919 AS VARCHAR(8)), 6)
+        WHEN 5 THEN 'YPE-' + RIGHT('000000' + CAST(c.IdCita * 1327 AS VARCHAR(8)), 6)
+        ELSE NULL
+    END,
+    CASE WHEN c.IdCita % 10 != 0 THEN DATEADD(HOUR, 1, c.FechaHora) ELSE NULL END,
     c.FechaHora
 FROM Cita c
 JOIN  Paciente p ON c.IdPaciente = p.IdPaciente
 LEFT JOIN Tarifa t   ON c.IdTarifa   = t.IdTarifa
 WHERE c.IdEstadoCita = 4;
-PRINT '=== Comprobantes insertados ===';
-GO
-
--- ============================================================
--- SECCIÓN 14: PAGOS
--- ============================================================
-INSERT INTO Pago (IdComprobante, IdMetodoPago, Monto, NroOperacion, FechaPago)
-SELECT
-    co.IdComprobante,
-    (co.IdComprobante % 5) + 1,
-    co.Total,
-    CASE (co.IdComprobante % 5) + 1
-        WHEN 3 THEN 'TRF-' + RIGHT('000000' + CAST(co.IdComprobante * 7919 AS VARCHAR(8)), 6)
-        WHEN 5 THEN 'YPE-' + RIGHT('000000' + CAST(co.IdComprobante * 1327 AS VARCHAR(8)), 6)
-        ELSE NULL
-    END,
-    DATEADD(HOUR, 1, co.FechaEmision)
-FROM Comprobante co
-WHERE co.EstadoPago = 'Pagado';
-PRINT '=== Pagos insertados ===';
+PRINT '=== Comprobantes insertados (MetodoPago integrado) ===';
 GO
 
 -- ============================================================
 -- REACTIVAR CONSTRAINTS
 -- ============================================================
-ALTER TABLE Contacto         WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Medico           WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Tarifa           WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE HorarioMedico    CHECK CONSTRAINT ALL;  -- sin WITH CHECK para no revalidar datos cargados
-ALTER TABLE Paciente         WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Seguro           WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Cita             WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE CancelacionCita  WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Triaje           WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE HistorialClinico WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Receta           WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE ItemReceta       WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Comprobante      WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Pago             WITH CHECK CHECK CONSTRAINT ALL;
-ALTER TABLE Usuario          WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Contacto          WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE ColegioMedico     WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE MedicoEspecialidad WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Medico            WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Tarifa            WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE HorarioMedico     CHECK CONSTRAINT ALL;
+ALTER TABLE Paciente          WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE PacienteSeguro    WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Seguro            WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Cita              WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE CancelacionCita   WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Triaje            WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE HistorialClinico  WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Receta            WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE ItemReceta        WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Comprobante       WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Usuario           WITH CHECK CHECK CONSTRAINT ALL;
 PRINT '=== Constraints reactivados ===';
 GO
 
@@ -687,8 +708,10 @@ SELECT 'Cita Anulada',         COUNT(*) FROM Cita WHERE IdEstadoCita=5 UNION ALL
 SELECT 'Historial',            COUNT(*) FROM HistorialClinico          UNION ALL
 SELECT 'Receta',               COUNT(*) FROM Receta                    UNION ALL
 SELECT 'Comprobante',          COUNT(*) FROM Comprobante               UNION ALL
-SELECT 'Pago',                 COUNT(*) FROM Pago                      UNION ALL
-SELECT 'Seguro',               COUNT(*) FROM Seguro;
+SELECT 'Seguro (catalogo)',    COUNT(*) FROM Seguro                    UNION ALL
+SELECT 'PacienteSeguro',       COUNT(*) FROM PacienteSeguro            UNION ALL
+SELECT 'ColegioMedico',        COUNT(*) FROM ColegioMedico             UNION ALL
+SELECT 'MedicoEspecialidad',   COUNT(*) FROM MedicoEspecialidad;
 
 PRINT '=== CARGA COMPLETADA EXITOSAMENTE ===';
 GO

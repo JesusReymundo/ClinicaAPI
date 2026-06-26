@@ -24,12 +24,9 @@ public class AuthController : ControllerBase
             return BadRequest(new { success = false, message = "Usuario y contraseña son requeridos" });
 
         var usuario = await _db.Usuarios
-            .Include(u => u.Rol)
-            .FirstOrDefaultAsync(u => u.Username == req.Username
-                                   && u.PasswordHash == req.Password
-                                   && u.Activo);
+            .FirstOrDefaultAsync(u => u.Username == req.Username);
 
-        if (usuario == null)
+        if (usuario == null || usuario.PasswordHash != req.Password || !usuario.Activo)
             return Unauthorized(new { success = false, message = "Usuario o contraseña incorrectos" });
 
         // Buscar si tiene perfil de médico
@@ -67,3 +64,4 @@ public class AuthController : ControllerBase
 }
 
 public record LoginRequest(string Username, string Password);
+

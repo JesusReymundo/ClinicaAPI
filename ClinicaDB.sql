@@ -23,33 +23,47 @@ GO
 -- ================================================================
 
 CREATE TABLE Rol (
-    IdRol         INT           IDENTITY(1,1) PRIMARY KEY,
-    NombreRol     VARCHAR(50)   NOT NULL UNIQUE,
-    Descripcion   VARCHAR(200)  NULL,
-    Activo        BIT           NOT NULL DEFAULT 1,
-    FechaCreacion DATETIME      NOT NULL DEFAULT GETDATE()
+    IdRol                 INT           IDENTITY(1,1) PRIMARY KEY,
+    NombreRol             VARCHAR(50)   NOT NULL UNIQUE,
+    Descripcion           VARCHAR(200)  NULL,
+    Activo                BIT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL
 );
 
 -- Tipos de documento: DNI, CE (Carnet Extranjería), RUC, PASAPORTE
 CREATE TABLE TipoDocumento (
-    IdTipoDocumento  INT         IDENTITY(1,1) PRIMARY KEY,
-    Codigo           VARCHAR(10) NOT NULL UNIQUE,
-    Nombre           VARCHAR(50) NOT NULL,
-    Longitud         INT         NULL,   -- longitud fija si aplica (DNI=8, RUC=11)
-    Activo           BIT         NOT NULL DEFAULT 1
+    IdTipoDocumento       INT         IDENTITY(1,1) PRIMARY KEY,
+    Codigo                VARCHAR(10) NOT NULL UNIQUE,
+    Nombre                VARCHAR(50) NOT NULL,
+    Longitud              INT         NULL,
+    Activo                BIT         NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME    NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME    NULL,
+    IdUsuarioCreacion     INT         NULL,
+    IdUsuarioModificacion INT         NULL
 );
 
 CREATE TABLE Especialidad (
-    IdEspecialidad  INT           IDENTITY(1,1) PRIMARY KEY,
-    Nombre          VARCHAR(100)  NOT NULL UNIQUE,
-    Descripcion     VARCHAR(300)  NULL,
-    Activo          BIT           NOT NULL DEFAULT 1,
-    FechaCreacion   DATETIME      NOT NULL DEFAULT GETDATE()
+    IdEspecialidad        INT           IDENTITY(1,1) PRIMARY KEY,
+    Nombre                VARCHAR(100)  NOT NULL UNIQUE,
+    Descripcion           VARCHAR(300)  NULL,
+    Activo                BIT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL
 );
 
 CREATE TABLE TipoAsegurado (
-    IdTipoAsegurado  INT         IDENTITY(1,1) PRIMARY KEY,
-    Nombre           VARCHAR(50) NOT NULL UNIQUE
+    IdTipoAsegurado       INT         IDENTITY(1,1) PRIMARY KEY,
+    Nombre                VARCHAR(50) NOT NULL UNIQUE,
+    FechaCreacion         DATETIME    NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME    NULL,
+    IdUsuarioCreacion     INT         NULL,
+    IdUsuarioModificacion INT         NULL
 );
 
 CREATE TABLE Empresa (
@@ -67,21 +81,25 @@ CREATE TABLE Empresa (
 );
 
 CREATE TABLE EstadoCita (
-    IdEstadoCita  INT         IDENTITY(1,1) PRIMARY KEY,
-    Nombre        VARCHAR(50) NOT NULL UNIQUE
+    IdEstadoCita          INT         IDENTITY(1,1) PRIMARY KEY,
+    Nombre                VARCHAR(50) NOT NULL UNIQUE,
+    FechaCreacion         DATETIME    NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME    NULL,
+    IdUsuarioCreacion     INT         NULL,
+    IdUsuarioModificacion INT         NULL
 );
 
-CREATE TABLE MetodoPago (
-    IdMetodoPago  INT         IDENTITY(1,1) PRIMARY KEY,
-    Nombre        VARCHAR(50) NOT NULL UNIQUE,
-    Activo        BIT         NOT NULL DEFAULT 1
-);
+-- MetodoPago eliminado (obs. profesor): el método se registra como campo en Comprobante
 
 CREATE TABLE TipoConsulta (
-    IdTipoConsulta  INT            IDENTITY(1,1) PRIMARY KEY,
-    Nombre          VARCHAR(50)    NOT NULL UNIQUE,
-    Descripcion     VARCHAR(200)   NULL,
-    TarifaExtra     DECIMAL(10,2)  NULL DEFAULT 0
+    IdTipoConsulta        INT            IDENTITY(1,1) PRIMARY KEY,
+    Nombre                VARCHAR(50)    NOT NULL UNIQUE,
+    Descripcion           VARCHAR(200)   NULL,
+    TarifaExtra           DECIMAL(10,2)  NULL DEFAULT 0,
+    FechaCreacion         DATETIME       NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME       NULL,
+    IdUsuarioCreacion     INT            NULL,
+    IdUsuarioModificacion INT            NULL
 );
 
 CREATE TABLE Consultorio (
@@ -124,12 +142,15 @@ CREATE TABLE Usuario (
 );
 
 CREATE TABLE Contacto (
-    IdContacto    INT           IDENTITY(1,1) PRIMARY KEY,
-    IdUsuario     INT           NOT NULL,
-    TipoContacto  VARCHAR(20)   NOT NULL,   -- Email, Celular, Fijo
-    Valor         VARCHAR(150)  NOT NULL,
-    EsPrincipal   BIT           NOT NULL DEFAULT 0,
-    FechaCreacion DATETIME      NOT NULL DEFAULT GETDATE(),
+    IdContacto            INT           IDENTITY(1,1) PRIMARY KEY,
+    IdUsuario             INT           NOT NULL,
+    TipoContacto          VARCHAR(20)   NOT NULL,
+    Valor                 VARCHAR(150)  NOT NULL,
+    EsPrincipal           BIT           NOT NULL DEFAULT 0,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
     CONSTRAINT FK_Contacto_Usuario FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
 );
 
@@ -140,7 +161,6 @@ CREATE TABLE Contacto (
 CREATE TABLE Medico (
     IdMedico              INT           IDENTITY(1,1) PRIMARY KEY,
     IdUsuario             INT           NOT NULL UNIQUE,
-    ColegioMedico         VARCHAR(20)   NOT NULL UNIQUE,
     Activo                BIT           NOT NULL DEFAULT 1,
     FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
     FechaModificacion     DATETIME      NULL,
@@ -149,7 +169,35 @@ CREATE TABLE Medico (
     CONSTRAINT FK_Medico_Usuario FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
 );
 
--- Un médico puede tener UNA O MÁS especialidades con tarifas distintas
+-- Un médico puede registrarse en más de un colegio médico (obs. profesor)
+CREATE TABLE ColegioMedico (
+    IdColegioMedico       INT           IDENTITY(1,1) PRIMARY KEY,
+    IdMedico              INT           NOT NULL,
+    Numero                VARCHAR(20)   NOT NULL UNIQUE,
+    Activo                BIT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
+    CONSTRAINT FK_ColegioMedico_Medico FOREIGN KEY (IdMedico) REFERENCES Medico(IdMedico)
+);
+
+-- Relación directa Médico-Especialidad (obs. profesor)
+CREATE TABLE MedicoEspecialidad (
+    IdMedicoEsp           INT           IDENTITY(1,1) PRIMARY KEY,
+    IdMedico              INT           NOT NULL,
+    IdEspecialidad        INT           NOT NULL,
+    Activo                BIT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
+    CONSTRAINT FK_ME_Medico       FOREIGN KEY (IdMedico)       REFERENCES Medico(IdMedico),
+    CONSTRAINT FK_ME_Especialidad FOREIGN KEY (IdEspecialidad) REFERENCES Especialidad(IdEspecialidad),
+    CONSTRAINT UQ_ME_Medico_Esp   UNIQUE (IdMedico, IdEspecialidad)
+);
+
+-- Tarifa: precio por especialidad (referencia MedicoEspecialidad implícitamente)
 CREATE TABLE Tarifa (
     IdTarifa              INT            IDENTITY(1,1) PRIMARY KEY,
     IdMedico              INT            NOT NULL,
@@ -204,21 +252,35 @@ CREATE TABLE Paciente (
     CONSTRAINT FK_Paciente_Empresa       FOREIGN KEY (IdEmpresa)       REFERENCES Empresa(IdEmpresa)
 );
 
+-- Seguro: catálogo de aseguradoras/planes (obs. profesor)
 CREATE TABLE Seguro (
-    IdSeguro              INT            IDENTITY(1,1) PRIMARY KEY,
+    IdSeguro              INT           IDENTITY(1,1) PRIMARY KEY,
+    NombreSeguro          VARCHAR(100)  NOT NULL UNIQUE,
+    TipoCobertura         VARCHAR(50)   NULL,
+    Descripcion           VARCHAR(200)  NULL,
+    Activo                BIT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL
+);
+
+-- Tabla intermedia Paciente-Seguro con historial (obs. profesor)
+CREATE TABLE PacienteSeguro (
+    IdPacienteSeguro      INT            IDENTITY(1,1) PRIMARY KEY,
     IdPaciente            INT            NOT NULL,
-    NombreSeguro          VARCHAR(100)   NOT NULL,
-    TipoCobertura         VARCHAR(50)    NULL,   -- Particular, SIS, ESSALUD, Privado
+    IdSeguro              INT            NOT NULL,
     NumeroPoliza          VARCHAR(50)    NULL,
-    FechaVigencia         DATE           NULL,
+    FechaAfiliacion       DATE           NULL,
     FechaVencimiento      DATE           NULL,
     CoberturaMax          DECIMAL(10,2)  NULL,
-    Activo                BIT            NOT NULL DEFAULT 1,
+    EsActivo              BIT            NOT NULL DEFAULT 1,
     FechaCreacion         DATETIME       NOT NULL DEFAULT GETDATE(),
     FechaModificacion     DATETIME       NULL,
     IdUsuarioCreacion     INT            NULL,
     IdUsuarioModificacion INT            NULL,
-    CONSTRAINT FK_Seguro_Paciente FOREIGN KEY (IdPaciente) REFERENCES Paciente(IdPaciente)
+    CONSTRAINT FK_PS_Paciente FOREIGN KEY (IdPaciente) REFERENCES Paciente(IdPaciente),
+    CONSTRAINT FK_PS_Seguro   FOREIGN KEY (IdSeguro)   REFERENCES Seguro(IdSeguro)
 );
 
 -- ================================================================
@@ -251,11 +313,14 @@ CREATE TABLE Cita (
 );
 
 CREATE TABLE CancelacionCita (
-    IdCancelacion    INT           IDENTITY(1,1) PRIMARY KEY,
-    IdCita           INT           NOT NULL,
-    Motivo           VARCHAR(300)  NULL,
-    CanceladoPor     VARCHAR(50)   NULL,
-    FechaCancelacion DATETIME      NOT NULL DEFAULT GETDATE(),
+    IdCancelacion         INT           IDENTITY(1,1) PRIMARY KEY,
+    IdCita                INT           NOT NULL,
+    Motivo                VARCHAR(300)  NULL,
+    CanceladoPor          VARCHAR(50)   NULL,
+    FechaCancelacion      DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
     CONSTRAINT FK_CancelacionCita_Cita FOREIGN KEY (IdCita) REFERENCES Cita(IdCita)
 );
 
@@ -274,17 +339,21 @@ CREATE TABLE Triaje (
     Temperatura           DECIMAL(4,1)   NULL,
     Saturacion            DECIMAL(4,1)   NULL,
     FechaRegistro         DATETIME       NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME       NULL,
     IdUsuarioCreacion     INT            NULL,
+    IdUsuarioModificacion INT            NULL,
     CONSTRAINT FK_Triaje_Cita FOREIGN KEY (IdCita) REFERENCES Cita(IdCita)
 );
 
 CREATE TABLE Receta (
-    IdReceta          INT           IDENTITY(1,1) PRIMARY KEY,
-    IdCita            INT           NOT NULL UNIQUE,
-    Diagnostico       VARCHAR(500)  NULL,
-    Indicaciones      VARCHAR(500)  NULL,
-    FechaEmision      DATETIME      NOT NULL DEFAULT GETDATE(),
-    IdUsuarioCreacion INT           NULL,
+    IdReceta              INT           IDENTITY(1,1) PRIMARY KEY,
+    IdCita                INT           NOT NULL UNIQUE,
+    Diagnostico           VARCHAR(500)  NULL,
+    Indicaciones          VARCHAR(500)  NULL,
+    FechaEmision          DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
     CONSTRAINT FK_Receta_Cita FOREIGN KEY (IdCita) REFERENCES Cita(IdCita)
 );
 
@@ -303,28 +372,33 @@ CREATE TABLE Medicamento (
     IdUsuarioModificacion INT            NULL
 );
 
--- Nombre cambiado a singular: ItemReceta (antes DetalleReceta)
 CREATE TABLE ItemReceta (
-    IdItem         INT           IDENTITY(1,1) PRIMARY KEY,
-    IdReceta       INT           NOT NULL,
-    IdMedicamento  INT           NOT NULL,
-    Dosis          VARCHAR(100)  NULL,
-    Frecuencia     VARCHAR(100)  NULL,
-    Duracion       VARCHAR(50)   NULL,
-    Cantidad       INT           NOT NULL DEFAULT 1,
+    IdItem                INT           IDENTITY(1,1) PRIMARY KEY,
+    IdReceta              INT           NOT NULL,
+    IdMedicamento         INT           NOT NULL,
+    Dosis                 VARCHAR(100)  NULL,
+    Frecuencia            VARCHAR(100)  NULL,
+    Duracion              VARCHAR(50)   NULL,
+    Cantidad              INT           NOT NULL DEFAULT 1,
+    FechaCreacion         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
     CONSTRAINT FK_ItemReceta_Receta      FOREIGN KEY (IdReceta)      REFERENCES Receta(IdReceta),
     CONSTRAINT FK_ItemReceta_Medicamento FOREIGN KEY (IdMedicamento) REFERENCES Medicamento(IdMedicamento)
 );
 
 CREATE TABLE HistorialClinico (
-    IdHistorial       INT           IDENTITY(1,1) PRIMARY KEY,
-    IdPaciente        INT           NOT NULL,
-    IdCita            INT           NULL,
-    Diagnostico       VARCHAR(500)  NULL,
-    Tratamiento       VARCHAR(500)  NULL,
-    Evolucion         VARCHAR(500)  NULL,
-    FechaRegistro     DATETIME      NOT NULL DEFAULT GETDATE(),
-    IdUsuarioCreacion INT           NULL,
+    IdHistorial           INT           IDENTITY(1,1) PRIMARY KEY,
+    IdPaciente            INT           NOT NULL,
+    IdCita                INT           NULL,
+    Diagnostico           VARCHAR(500)  NULL,
+    Tratamiento           VARCHAR(500)  NULL,
+    Evolucion             VARCHAR(500)  NULL,
+    FechaRegistro         DATETIME      NOT NULL DEFAULT GETDATE(),
+    FechaModificacion     DATETIME      NULL,
+    IdUsuarioCreacion     INT           NULL,
+    IdUsuarioModificacion INT           NULL,
     CONSTRAINT FK_HistorialClinico_Paciente FOREIGN KEY (IdPaciente) REFERENCES Paciente(IdPaciente),
     CONSTRAINT FK_HistorialClinico_Cita     FOREIGN KEY (IdCita)     REFERENCES Cita(IdCita)
 );
@@ -344,23 +418,15 @@ CREATE TABLE Comprobante (
     IGV                   DECIMAL(10,2)  NOT NULL DEFAULT 0,
     Total                 DECIMAL(10,2)  NOT NULL,
     EstadoPago            VARCHAR(20)    NOT NULL DEFAULT 'Pendiente',
+    MetodoPago            VARCHAR(50)    NULL DEFAULT 'Efectivo',   -- obs. profesor: eliminada tabla Pago/MetodoPago
+    NroOperacion          VARCHAR(50)    NULL,
+    FechaPago             DATETIME       NULL,
     FechaEmision          DATETIME       NOT NULL DEFAULT GETDATE(),
     IdUsuarioCreacion     INT            NULL,
     IdUsuarioModificacion INT            NULL,
     CONSTRAINT FK_Comprobante_Cita FOREIGN KEY (IdCita) REFERENCES Cita(IdCita)
 );
-
-CREATE TABLE Pago (
-    IdPago            INT            IDENTITY(1,1) PRIMARY KEY,
-    IdComprobante     INT            NOT NULL,
-    IdMetodoPago      INT            NOT NULL,
-    Monto             DECIMAL(10,2)  NOT NULL,
-    NroOperacion      VARCHAR(50)    NULL,
-    FechaPago         DATETIME       NOT NULL DEFAULT GETDATE(),
-    IdUsuarioCreacion INT            NULL,
-    CONSTRAINT FK_Pago_Comprobante FOREIGN KEY (IdComprobante) REFERENCES Comprobante(IdComprobante),
-    CONSTRAINT FK_Pago_MetodoPago  FOREIGN KEY (IdMetodoPago)  REFERENCES MetodoPago(IdMetodoPago)
-);
+-- Tablas Pago y MetodoPago eliminadas (obs. profesor): registros consolidados en Comprobante
 
 GO
 
@@ -374,6 +440,9 @@ CREATE INDEX IX_Cita_Paciente          ON Cita(IdPaciente);
 CREATE INDEX IX_Cita_Medico            ON Cita(IdMedico);
 CREATE INDEX IX_Cita_Especialidad      ON Cita(IdEspecialidad);
 CREATE INDEX IX_Tarifa_Medico          ON Tarifa(IdMedico);
+CREATE INDEX IX_PacienteSeguro_Paciente ON PacienteSeguro(IdPaciente);
+CREATE INDEX IX_ColegioMedico_Medico    ON ColegioMedico(IdMedico);
+CREATE INDEX IX_MedicoEsp_Medico        ON MedicoEspecialidad(IdMedico);
 
 GO
-PRINT 'ClinicaDB v2 creada exitosamente — 26 tablas, sin AuditoriaLog.';
+PRINT 'ClinicaDB v3 creada — 28 tablas: +ColegioMedico +MedicoEspecialidad +PacienteSeguro, -Pago -MetodoPago';
