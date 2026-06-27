@@ -272,8 +272,8 @@ relationship OneToOne {
 
 // ─── CONFIGURACIÓN ────────────────────────────────────────────
 
-pagination Cita, Paciente, Medico, HistorialClinico, Comprobante with pagination
-pagination Receta, ItemReceta, Triaje, Seguro, Tarifa with pagination
+paginate Cita, Paciente, Medico, HistorialClinico, Comprobante with pagination
+paginate Receta, ItemReceta, Triaje, Seguro, Tarifa with pagination
 
 service all with serviceClass
 
