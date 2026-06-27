@@ -67,11 +67,6 @@ entity EstadoCita {
     nombre String required maxlength(50)
 }
 
-entity MetodoPago {
-    nombre String  required maxlength(50)
-    activo Boolean required
-}
-
 entity TipoConsulta {
     nombre      String     required maxlength(50)
     descripcion String     maxlength(200)
@@ -86,6 +81,15 @@ entity Consultorio {
     capacidad   Integer required
     telefono    String  maxlength(20)
     activo      Boolean required
+}
+
+// ─── CATÁLOGO DE SEGUROS ──────────────────────────────────────
+
+entity Seguro {
+    nombreSeguro  String  required maxlength(100)
+    tipoCobertura String  maxlength(50)
+    descripcion   String  maxlength(200)
+    activo        Boolean required
 }
 
 // ─── IDENTIDAD ────────────────────────────────────────────────
@@ -112,8 +116,16 @@ entity Contacto {
 // ─── MÉDICOS ─────────────────────────────────────────────────
 
 entity Medico {
-    colegioMedico String  required maxlength(20)
-    activo        Boolean required
+    activo Boolean required
+}
+
+entity ColegioMedico {
+    numero String  required maxlength(20)
+    activo Boolean required
+}
+
+entity MedicoEspecialidad {
+    activo Boolean required
 }
 
 entity Tarifa {
@@ -132,28 +144,25 @@ entity HorarioMedico {
 // ─── PACIENTES ───────────────────────────────────────────────
 
 entity Paciente {
-    numeroSeguro   String  maxlength(50)
     grupoSanguineo String  maxlength(5)
     alergias       String  maxlength(500)
     activo         Boolean required
 }
 
-entity Seguro {
-    nombreSeguro     String     required maxlength(100)
-    tipoCobertura    String     maxlength(50)
+entity PacienteSeguro {
     numeroPoliza     String     maxlength(50)
-    fechaVigencia    LocalDate
+    fechaAfiliacion  LocalDate
     fechaVencimiento LocalDate
     coberturaMax     BigDecimal
-    activo           Boolean    required
+    esActivo         Boolean    required
 }
 
 // ─── CITAS ───────────────────────────────────────────────────
 
 entity Cita {
-    fechaHora    ZonedDateTime required
-    motivo       String        required maxlength(300)
-    observaciones String       maxlength(500)
+    fechaHora     ZonedDateTime required
+    motivo        String        required maxlength(300)
+    observaciones String        maxlength(500)
 }
 
 entity CancelacionCita {
@@ -191,89 +200,90 @@ entity Medicamento {
 }
 
 entity ItemReceta {
-    dosis     String  maxlength(100)
-    frecuencia String maxlength(100)
-    duracion  String  maxlength(50)
-    cantidad  Integer required
+    dosis      String  maxlength(100)
+    frecuencia String  maxlength(100)
+    duracion   String  maxlength(50)
+    cantidad   Integer required
 }
 
 entity HistorialClinico {
-    diagnostico  String        maxlength(500)
-    tratamiento  String        maxlength(500)
-    evolucion    String        maxlength(500)
+    diagnostico   String        maxlength(500)
+    tratamiento   String        maxlength(500)
+    evolucion     String        maxlength(500)
     fechaRegistro ZonedDateTime required
 }
 
 // ─── FINANCIERO ───────────────────────────────────────────────
 
 entity Comprobante {
-    tipoComprobante String     required maxlength(20)
-    serie           String     required maxlength(5)
-    numero          String     required maxlength(20)
-    subtotal        BigDecimal required
-    igv             BigDecimal required
-    total           BigDecimal required
-    estadoPago      String     required maxlength(20)
+    tipoComprobante String        required maxlength(20)
+    serie           String        required maxlength(5)
+    numero          String        required maxlength(20)
+    subtotal        BigDecimal    required
+    igv             BigDecimal    required
+    total           BigDecimal    required
+    estadoPago      String        required maxlength(20)
     fechaEmision    ZonedDateTime required
-}
-
-entity Pago {
-    monto        BigDecimal    required
-    nroOperacion String        maxlength(50)
-    fechaPago    ZonedDateTime required
+    metodoPago      String        maxlength(50)
+    nroOperacion    String        maxlength(50)
+    fechaPago       ZonedDateTime
 }
 
 // ─── RELACIONES ───────────────────────────────────────────────
 
 relationship ManyToOne {
     // Identidad
-    Usuario{rol(nombreRol)}       to Rol
-    Contacto{usuario(username)}   to Usuario
+    Usuario{rol(nombreRol)}           to Rol
+    Contacto{usuario(username)}       to Usuario
 
     // Paciente
-    Paciente{tipoAsegurado(nombre)} to TipoAsegurado
-    Paciente{empresa(razonSocial)}  to Empresa
-    Seguro{paciente}                to Paciente
+    Paciente{tipoAsegurado(nombre)}   to TipoAsegurado
+    Paciente{empresa(razonSocial)}    to Empresa
 
-    // Médico
-    Tarifa{medico(colegioMedico)}      to Medico
-    Tarifa{especialidad(nombre)}       to Especialidad
-    HorarioMedico{medico(colegioMedico)} to Medico
-    HorarioMedico{consultorio(nombre)}   to Consultorio
+    // Tabla intermedia Paciente-Seguro
+    PacienteSeguro{paciente}          to Paciente
+    PacienteSeguro{seguro(nombreSeguro)} to Seguro
+
+    // Médico — colegio y especialidad como tablas separadas
+    ColegioMedico{medico}             to Medico
+    MedicoEspecialidad{medico}        to Medico
+    MedicoEspecialidad{especialidad(nombre)} to Especialidad
+
+    // Tarifa y horario
+    Tarifa{medico}                    to Medico
+    Tarifa{especialidad(nombre)}      to Especialidad
+    HorarioMedico{medico}             to Medico
+    HorarioMedico{consultorio(nombre)} to Consultorio
 
     // Cita
-    Cita{paciente}              to Paciente
-    Cita{medico(colegioMedico)} to Medico
-    Cita{especialidad(nombre)}  to Especialidad
-    Cita{tarifa}                to Tarifa
-    Cita{estadoCita(nombre)}    to EstadoCita
-    Cita{consultorio(nombre)}   to Consultorio
-    Cita{tipoConsulta(nombre)}  to TipoConsulta
+    Cita{paciente}                    to Paciente
+    Cita{medico}                      to Medico
+    Cita{especialidad(nombre)}        to Especialidad
+    Cita{tarifa}                      to Tarifa
+    Cita{estadoCita(nombre)}          to EstadoCita
+    Cita{consultorio(nombre)}         to Consultorio
+    Cita{tipoConsulta(nombre)}        to TipoConsulta
 
     // Clínico
-    HistorialClinico{paciente}  to Paciente
-    HistorialClinico{cita}      to Cita
-    ItemReceta{receta}          to Receta
-    ItemReceta{medicamento(nombre)} to Medicamento
-
-    // Financiero
-    Pago{metodoPago(nombre)} to MetodoPago
+    HistorialClinico{paciente}        to Paciente
+    HistorialClinico{cita}            to Cita
+    ItemReceta{receta}                to Receta
+    ItemReceta{medicamento(nombre)}   to Medicamento
 }
 
 relationship OneToOne {
-    Medico{usuario(username)}       to Usuario
-    Paciente{usuario(username)}     to Usuario
-    CancelacionCita{cita}           to Cita
-    Triaje{cita}                    to Cita
-    Receta{cita}                    to Cita
-    Comprobante{cita}               to Cita
-    Pago{comprobante(numero)}       to Comprobante
+    Medico{usuario(username)}         to Usuario
+    Paciente{usuario(username)}       to Usuario
+    CancelacionCita{cita}             to Cita
+    Triaje{cita}                      to Cita
+    Receta{cita}                      to Cita
+    Comprobante{cita}                 to Cita
 }
 
 // ─── CONFIGURACIÓN ────────────────────────────────────────────
 
 paginate Cita, Paciente, Medico, HistorialClinico, Comprobante with pagination
-paginate Receta, ItemReceta, Triaje, Seguro, Tarifa with pagination
+paginate Receta, ItemReceta, Triaje, PacienteSeguro, Tarifa with pagination
 
 service all with serviceClass
 
