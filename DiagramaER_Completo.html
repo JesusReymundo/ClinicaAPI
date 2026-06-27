@@ -752,10 +752,306 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
   </table>
 </div>
 
-<!-- ══ SECCIÓN 4: STACK TECNOLÓGICO ══ -->
+<!-- ══ SECCIÓN 4: JUSTIFICACIÓN DE TABLAS ══ -->
 <div class="seccion">
   <div class="divider"></div>
-  <h2 class="seccion-title">⚙️ 4. Stack Tecnológico</h2>
+  <h2 class="seccion-title">📐 4. Justificación del Diseño — 26 Tablas</h2>
+  <p class="seccion-sub">Sustento técnico y funcional de la existencia de cada tabla · Consecuencias de no tenerla · Decisiones de normalización</p>
+
+  <div class="tablas-grid">
+
+    <!-- ─ ROL ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-purple"><span class="t-name">🔐 Rol</span><span class="t-badge">Catálogo · Grupo A</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Implementa control de acceso basado en roles (RBAC). Define qué puede ver y hacer cada tipo de usuario en el sistema.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin esta tabla, todos los usuarios tendrían los mismos permisos. Un paciente podría ver historiales de otros, o un médico podría borrar registros financieros.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> Catálogo separado (no enum en Usuario) permite agregar nuevos roles sin alterar el esquema ni los modelos C#. NombreRol con UQ evita duplicados.</p>
+        <div class="cols-pills"><span class="cpill pk">IdRol PK</span><span class="cpill">NombreRol UQ</span><span class="cpill">Descripcion</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ TIPODOCUMENTO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-purple"><span class="t-name">🪪 TipoDocumento</span><span class="t-badge">Catálogo · Grupo A</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Soporta múltiples tipos de identificación: DNI (8 dígitos), Carné de Extranjería, Pasaporte (alfanumérico), RUC (11 dígitos).</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin este catálogo habría que usar un campo DNI CHAR(8) que excluye automáticamente a pacientes extranjeros y empresas. La columna Longitud permite validar el número de caracteres según el tipo.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> El campo Codigo en Usuario es VARCHAR(10) para almacenar el tipo directamente, apoyado en este catálogo para validación en frontend y backend.</p>
+        <div class="cols-pills"><span class="cpill pk">IdTipoDocumento PK</span><span class="cpill">Codigo UQ</span><span class="cpill">Nombre</span><span class="cpill">Longitud</span></div>
+      </div>
+    </div>
+
+    <!-- ─ ESPECIALIDAD ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">🩺 Especialidad</span><span class="t-badge">Catálogo · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Catálogo normalizado de especialidades médicas (Cardiología, Pediatría, Traumatología, etc.) referenciado desde Cita, Tarifa y MedicoEspecialidad.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin este catálogo, el nombre de la especialidad se repetiría como texto libre en cada cita y tarifa. "Cardiología" podría escribirse de 5 formas distintas, imposibilitando reportes y filtros confiables.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> Nombre con UQ garantiza unicidad. Activo permite desactivar especialidades sin borrar el historial de citas asociadas.</p>
+        <div class="cols-pills"><span class="cpill pk">IdEspecialidad PK</span><span class="cpill">Nombre UQ</span><span class="cpill">Descripcion</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ ESTADOCITA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-orange"><span class="t-name">📋 EstadoCita</span><span class="t-badge">Catálogo · Grupo D</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Gestiona el ciclo de vida de una cita: Pendiente → Confirmada → Atendida / Cancelada / No asistió.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Si el estado fuera un campo VARCHAR libre en Cita, se producirían inconsistencias ("Cancelada", "cancelada", "CANCEL") que rompen filtros, reportes y lógica de negocio.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> Catálogo separado (no enum SQL) permite agregar estados futuros (p.ej. "En espera de confirmación de pago") sin migración de esquema.</p>
+        <div class="cols-pills"><span class="cpill pk">IdEstadoCita PK</span><span class="cpill">Nombre UQ</span></div>
+      </div>
+    </div>
+
+    <!-- ─ TIPOCONSULTA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-orange"><span class="t-name">🚘 TipoConsulta</span><span class="t-badge">Catálogo · Grupo D</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Diferencia el tipo de atención: Primera Vez, Seguimiento, Urgencia. Cada tipo puede tener una TarifaExtra que se suma a la tarifa base del médico.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin esta tabla no se podría cobrar diferente por urgencias, ni generar reportes de "cuántas primeras consultas vs seguimientos" por médico o especialidad.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> TarifaExtra como DECIMAL permite NULL (sin cargo adicional) o un monto fijo independiente del médico.</p>
+        <div class="cols-pills"><span class="cpill pk">IdTipoConsulta PK</span><span class="cpill">Nombre UQ</span><span class="cpill">TarifaExtra</span></div>
+      </div>
+    </div>
+
+    <!-- ─ TIPOASEGURADO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-teal"><span class="t-name">🏷 TipoAsegurado</span><span class="t-badge">Catálogo · Grupo C</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Clasifica al paciente en: Particular (paga él), Asegurado (cobertura de seguro) o Corporativo (empresa paga). Determina qué flujo de facturación aplicar.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin este catálogo, Comprobante no sabría si emitir boleta al paciente, factura a la empresa o enviar cobro al seguro. Es la entrada del proceso financiero.</p>
+        <div class="cols-pills"><span class="cpill pk">IdTipoAsegurado PK</span><span class="cpill">Nombre UQ</span></div>
+      </div>
+    </div>
+
+    <!-- ─ EMPRESA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-teal"><span class="t-name">🏭 Empresa</span><span class="t-badge">Catálogo · Grupo C</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Almacena datos fiscales (RUC, razón social) de empresas que tienen convenio con la clínica para atender a sus empleados.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin esta tabla los datos de la empresa se repetirían en cada paciente corporativo. Si la empresa cambia de dirección habría que actualizar decenas de registros. Con catálogo se actualiza en un solo lugar.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> RUC con UQ evita duplicar empresas. La FK de Paciente a Empresa es opcional (NULL para pacientes no corporativos).</p>
+        <div class="cols-pills"><span class="cpill pk">IdEmpresa PK</span><span class="cpill">RazonSocial</span><span class="cpill">RUC UQ</span><span class="cpill">Telefono</span></div>
+      </div>
+    </div>
+
+    <!-- ─ CONSULTORIO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">🏢 Consultorio</span><span class="t-badge">Catálogo · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Gestiona los espacios físicos donde se realizan las consultas. Cada cita y cada bloque de horario se asigna a un consultorio específico.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin esta tabla no se puede controlar que dos médicos estén asignados al mismo consultorio al mismo tiempo. Evita conflictos de espacio físico en el agendamiento.</p>
+        <p class="motive"><strong>Decisión de diseño (Obs. #1):</strong> Ampliado con Numero, Piso, Descripcion, Capacidad y Telefono para gestión completa del espacio, no solo nombre.</p>
+        <div class="cols-pills"><span class="cpill pk">IdConsultorio PK</span><span class="cpill">Nombre</span><span class="cpill">Numero</span><span class="cpill">Piso</span><span class="cpill">Capacidad</span></div>
+      </div>
+    </div>
+
+    <!-- ─ SEGURO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-green"><span class="t-name">🛡 Seguro</span><span class="t-badge">Catálogo v3 · Grupo C</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Catálogo de aseguradoras que operan en el Perú: EsSalud, SIS, Rímac, Pacífico, Mapfre, etc. Cada aseguradora existe independientemente de los pacientes afiliados.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> En v2, Seguro tenía FK a Paciente (1 seguro por paciente). En v3 es catálogo: si 500 pacientes tienen EsSalud, el nombre "EsSalud" se almacena UNA sola vez y se referencia 500 veces desde PacienteSeguro. Elimina duplicación masiva.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> No se podría filtrar "todos los pacientes de EsSalud" de forma confiable si cada uno escribiera el nombre manualmente.</p>
+        <div class="cols-pills"><span class="cpill pk">IdSeguro PK</span><span class="cpill">NombreSeguro UQ</span><span class="cpill">TipoCobertura</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ USUARIO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-purple"><span class="t-name">👤 Usuario</span><span class="t-badge">Identidad · Grupo A</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Entidad central de autenticación y datos personales. Unifica bajo un mismo modelo los datos de médicos Y pacientes (nombres, documento, dirección, credenciales).</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin Usuario centralizado, Medico y Paciente tendrían columnas duplicadas (Nombres, Apellidos, DNI, etc.). Si el médico es también paciente eventual, sus datos se gestionan en un solo registro.</p>
+        <p class="motive"><strong>Decisión de diseño (Obs. #2):</strong> TipoDocumento + NumeroDocumento en lugar de DNI CHAR(8) fijo. Username y PasswordHash para autenticación JWT. Activo para desactivar sin borrar.</p>
+        <div class="cols-pills"><span class="cpill pk">IdUsuario PK</span><span class="cpill fk">IdRol FK</span><span class="cpill">Username UQ</span><span class="cpill">PasswordHash</span><span class="cpill">NumeroDocumento UQ</span></div>
+      </div>
+    </div>
+
+    <!-- ─ CONTACTO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-gray"><span class="t-name">📞 Contacto</span><span class="t-badge">Soporte · Grupo A</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Almacena múltiples medios de contacto por usuario (celular, email, teléfono fijo, WhatsApp) sin límite de cantidad.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Si los contactos fueran columnas en Usuario (Telefono1, Telefono2, Email), habría un límite arbitrario. Con tabla separada se pueden agregar N contactos. EsPrincipal marca el contacto preferido para notificaciones automáticas.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> No se podría enviar confirmaciones de cita por el canal preferido del paciente ni mantener un directorio de contactos histórico.</p>
+        <div class="cols-pills"><span class="cpill pk">IdContacto PK</span><span class="cpill fk">IdUsuario FK</span><span class="cpill">TipoContacto</span><span class="cpill">Valor</span><span class="cpill">EsPrincipal</span></div>
+      </div>
+    </div>
+
+    <!-- ─ MEDICO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">👨‍⚕️ Medico</span><span class="t-badge">Personal Médico · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Perfil profesional del médico separado de sus datos personales (en Usuario). Actúa como tabla pivot desde la que se relacionan ColegioMedico, MedicoEspecialidad, Tarifa, HorarioMedico y Cita.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> La separación Medico ↔ Usuario permite que el mismo médico tenga múltiples especialidades, tarifas y horarios sin duplicar su nombre o documento en cada registro. La FK es 1:1 con UQ en IdUsuario.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Todos los datos profesionales del médico (especialidades, tarifas, horarios) tendrían que estar en Usuario, mezclando identidad con perfil profesional.</p>
+        <div class="cols-pills"><span class="cpill pk">IdMedico PK</span><span class="cpill fk">IdUsuario FK UQ</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ COLEGIO MÉDICO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">🏥 ColegioMedico</span><span class="t-badge">Personal Médico v3 · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Registra los números de colegiatura del médico en el Colegio Médico del Perú. Un médico puede estar colegiado en más de un departamento (CMP Lima, CMP Arequipa, CMP Callao).</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> En v2 era VARCHAR(20) en Medico: solo 1 número, sin historial, sin poder desactivar colegiaturas vencidas. Como tabla separada permite N registros con campo Activo para controlar vigencia.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Un médico con doble colegiatura no podría registrarse correctamente. Tampoco se podría auditar cambios de número de colegiatura a lo largo del tiempo.</p>
+        <div class="cols-pills"><span class="cpill pk">IdColegioMedico PK</span><span class="cpill fk">IdMedico FK</span><span class="cpill">Numero UQ</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ MEDICO ESPECIALIDAD ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">🔗 MedicoEspecialidad</span><span class="t-badge">Personal Médico v3 · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Registra formalmente qué especialidades está certificado para ejercer cada médico. Restricción UQ en (IdMedico, IdEspecialidad) garantiza que no se duplique la misma habilitación.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> En v2 la especialidad del médico solo existía si tenía una tarifa configurada. Con MedicoEspecialidad se puede habilitar al médico para atender Cardiología ANTES de definirle tarifa. Permite validar en Cita que el médico realmente ejerce la especialidad seleccionada.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Un administrativo podría agendar una cita de Neurocirugía para un médico de Medicina General sin ningún control automático.</p>
+        <div class="cols-pills"><span class="cpill pk">IdMedicoEsp PK</span><span class="cpill fk">IdMedico FK</span><span class="cpill fk">IdEspecialidad FK</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ TARIFA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">💰 Tarifa</span><span class="t-badge">Personal Médico · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Define el monto de consulta por combinación médico + especialidad. Un cardiólogo cobra S/. 120 por Cardiología y S/. 80 por Medicina General. Sin tabla separada esto es imposible.</p>
+        <p class="motive"><strong>¿Qué resuelve? (Obs. #4):</strong> Elimina TarifaConsulta como campo fijo en Medico. Implementa la relación M:N entre Médico y Especialidad agregando el atributo Monto, que es el precio específico por esa combinación.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Todos los médicos cobrarían el mismo monto fijo sin importar la especialidad, o habría que hardcodear tarifas en el código de la aplicación.</p>
+        <div class="cols-pills"><span class="cpill pk">IdTarifa PK</span><span class="cpill fk">IdMedico FK</span><span class="cpill fk">IdEspecialidad FK</span><span class="cpill">Monto NN</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ HORARIO MÉDICO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-blue"><span class="t-name">🕐 HorarioMedico</span><span class="t-badge">Personal Médico · Grupo B</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Define los bloques de disponibilidad semanal de cada médico (día, hora inicio, hora fin, consultorio asignado). Es la base del sistema de agendamiento.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin esta tabla no se puede verificar si un médico atiende los lunes de 8am a 1pm antes de agendar una cita. Tampoco se puede controlar qué consultorio usa en cada turno, pudiendo asignar dos médicos al mismo espacio.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Las citas se agendan sin verificar disponibilidad real, generando doble booking de médico o consultorio.</p>
+        <div class="cols-pills"><span class="cpill pk">IdHorario PK</span><span class="cpill fk">IdMedico FK</span><span class="cpill fk">IdConsultorio FK</span><span class="cpill">DiaSemana</span><span class="cpill">HoraInicio</span><span class="cpill">HoraFin</span></div>
+      </div>
+    </div>
+
+    <!-- ─ PACIENTE ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-green"><span class="t-name">🧑 Paciente</span><span class="t-badge">Pacientes · Grupo C</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Perfil clínico del paciente. Separa los datos médicamente relevantes (grupo sanguíneo, alergias, tipo de seguro) de los datos personales/de acceso (en Usuario).</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> La separación Paciente ↔ Usuario permite que un médico acceda al perfil clínico del paciente sin necesidad de ver sus credenciales ni dirección. En una emergencia, GrupoSanguineo y Alergias son vitales para la atención.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> GrupoSanguineo y Alergias estarían en Usuario, mezclado con contraseñas y datos de acceso, rompiendo el principio de responsabilidad única.</p>
+        <div class="cols-pills"><span class="cpill pk">IdPaciente PK</span><span class="cpill fk">IdUsuario FK UQ</span><span class="cpill fk">IdTipoAsegurado FK</span><span class="cpill fk">IdEmpresa FK</span><span class="cpill">GrupoSanguineo</span><span class="cpill">Alergias</span></div>
+      </div>
+    </div>
+
+    <!-- ─ PACIENTE SEGURO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-green"><span class="t-name">🔗 PacienteSeguro</span><span class="t-badge">Pacientes v3 · Grupo C</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Tabla intermedia que implementa la relación M:N entre Paciente y Seguro. Un paciente puede tener EsSalud + Rímac activos simultáneamente. Un seguro puede cubrir a miles de pacientes.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Almacena los atributos propios del contrato: NumeroPoliza (individual por paciente), FechaAfiliacion, FechaVencimiento y CoberturaMax. Estos atributos no pertenecen ni a Paciente ni a Seguro — pertenecen a la RELACIÓN entre ambos.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Un paciente solo podría tener un seguro. Si vence EsSalud y contrata Rímac, no habría historial del seguro anterior. Pérdida total de trazabilidad de cobertura.</p>
+        <div class="cols-pills"><span class="cpill pk">IdPacienteSeguro PK</span><span class="cpill fk">IdPaciente FK</span><span class="cpill fk">IdSeguro FK</span><span class="cpill">NumeroPoliza</span><span class="cpill">FechaVencimiento</span><span class="cpill">EsActivo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ CITA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-orange"><span class="t-name">⭐ Cita</span><span class="t-badge">Núcleo del Sistema · Grupo D</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Tabla central del sistema. Registra cada evento de atención médica vinculando: paciente, médico, especialidad, tarifa, consultorio, estado y tipo de consulta en un único registro.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Es el punto de convergencia de todo el sistema. Sin Cita no hay agendamiento, no se genera Triaje, Receta, HistorialClinico ni Comprobante. Todos los procesos del sistema clínico nacen y terminan en una Cita.</p>
+        <p class="motive"><strong>Decisión de diseño:</strong> 7 FKs en una sola tabla (paciente, médico, especialidad, tarifa, estado, consultorio, tipo de consulta) desnormalizan intencionalmente para que una sola consulta SQL devuelva el contexto completo de una cita sin JOINs adicionales en los casos de uso más frecuentes.</p>
+        <div class="cols-pills"><span class="cpill pk">IdCita PK</span><span class="cpill fk">IdPaciente FK</span><span class="cpill fk">IdMedico FK</span><span class="cpill fk">IdEspecialidad FK</span><span class="cpill fk">IdTarifa FK</span><span class="cpill fk">IdEstadoCita FK</span><span class="cpill fk">IdConsultorio FK</span><span class="cpill fk">IdTipoConsulta FK</span><span class="cpill">FechaHora</span><span class="cpill">Motivo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ CANCELACION CITA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-orange"><span class="t-name">❌ CancelacionCita</span><span class="t-badge">Núcleo · Grupo D</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Registra el motivo, fecha y responsable de la cancelación de una cita. Separado de Cita para no mezclar datos operativos con datos de cancelación que solo aplican a una fracción de citas.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Si los campos Motivo, CanceladoPor y FechaCancelacion estuvieran en Cita, el 80% de los registros tendrían esos campos en NULL (las citas atendidas). Tabla 1:1 opcional mantiene Cita limpia y optimiza almacenamiento.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> No se podría generar reportes de "¿por qué cancelan los pacientes?" ni identificar médicos con alta tasa de cancelación por inasistencia.</p>
+        <div class="cols-pills"><span class="cpill pk">IdCancelacion PK</span><span class="cpill fk">IdCita FK UQ</span><span class="cpill">Motivo</span><span class="cpill">CanceladoPor</span><span class="cpill">FechaCancelacion</span></div>
+      </div>
+    </div>
+
+    <!-- ─ TRIAJE ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-red"><span class="t-name">🩹 Triaje</span><span class="t-badge">Clínico · Grupo E</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Registra los signos vitales del paciente medidos ANTES de la consulta: peso, talla, presión arterial, frecuencia cardíaca, temperatura y saturación de oxígeno.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Separado de Cita porque son datos clínicos especializados que solo los registra enfermería, no el sistema de agendamiento. La relación 1:1 con Cita garantiza que cada consulta tiene como máximo un triaje.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Los signos vitales tendrían que almacenarse en Cita (con 9 columnas extra) o en HistorialClinico como texto libre sin estructura, imposibilitando análisis estadísticos de salud pública.</p>
+        <div class="cols-pills"><span class="cpill pk">IdTriaje PK</span><span class="cpill fk">IdCita FK UQ</span><span class="cpill">Peso</span><span class="cpill">Talla</span><span class="cpill">PresionSistolica</span><span class="cpill">Temperatura</span><span class="cpill">Saturacion</span></div>
+      </div>
+    </div>
+
+    <!-- ─ HISTORIAL CLÍNICO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-red"><span class="t-name">📋 HistorialClinico</span><span class="t-badge">Clínico · Grupo E</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Registro acumulativo de diagnósticos y tratamientos del paciente a lo largo del tiempo. Cada entrada está vinculada a la cita específica que la originó.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Un médico que atiende a un paciente nuevo puede ver TODO su historial de consultas anteriores (diagnósticos, tratamientos, evolución) para no empezar desde cero. Es esencial para medicina preventiva y seguimiento de enfermedades crónicas.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Cada consulta sería un evento aislado sin contexto histórico. Un médico no sabría si el paciente ya fue diagnosticado de la misma afección el año anterior.</p>
+        <div class="cols-pills"><span class="cpill pk">IdHistorial PK</span><span class="cpill fk">IdPaciente FK</span><span class="cpill fk">IdCita FK</span><span class="cpill">Diagnostico</span><span class="cpill">Tratamiento</span><span class="cpill">Evolucion</span><span class="cpill">FechaRegistro</span></div>
+      </div>
+    </div>
+
+    <!-- ─ RECETA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-red"><span class="t-name">💊 Receta</span><span class="t-badge">Clínico · Grupo E</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Prescripción médica estructurada vinculada a una consulta específica. 1:1 con Cita porque cada consulta genera máximo una receta (los medicamentos van en ItemReceta).</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Separado de Cita porque la receta tiene su propio ciclo de vida (puede emitirse días después de la consulta, puede tener múltiples medicamentos). La FK UQ en IdCita impide generar dos recetas para la misma consulta.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Las prescripciones se almacenarían como texto libre en Cita.Observaciones, sin estructura para controlar stock, generar alertas de medicamentos o calcular costos de medicación.</p>
+        <div class="cols-pills"><span class="cpill pk">IdReceta PK</span><span class="cpill fk">IdCita FK UQ</span><span class="cpill">Diagnostico</span><span class="cpill">Indicaciones</span><span class="cpill">FechaEmision</span></div>
+      </div>
+    </div>
+
+    <!-- ─ ITEM RECETA ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-red"><span class="t-name">📝 ItemReceta</span><span class="t-badge">Clínico · Grupo E</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Cada línea de la receta: qué medicamento, con qué dosis, cada cuántas horas, por cuántos días y en qué cantidad. Una receta puede tener 1 o N medicamentos.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin ItemReceta habría que almacenar todos los medicamentos como texto en Receta ("Paracetamol 500mg c/8h x 5d, Ibuprofeno 400mg c/12h x 3d"), imposibilitando descontar stock automáticamente o detectar interacciones medicamentosas.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> Pérdida total de control de inventario de medicamentos, trazabilidad de prescripciones y análisis de patrones de medicación por médico o diagnóstico.</p>
+        <div class="cols-pills"><span class="cpill pk">IdItem PK</span><span class="cpill fk">IdReceta FK</span><span class="cpill fk">IdMedicamento FK</span><span class="cpill">Dosis</span><span class="cpill">Frecuencia</span><span class="cpill">Cantidad</span></div>
+      </div>
+    </div>
+
+    <!-- ─ MEDICAMENTO ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-red"><span class="t-name">💊 Medicamento</span><span class="t-badge">Clínico · Grupo E</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Catálogo de medicamentos disponibles en la clínica con datos farmacéuticos (presentación, concentración, laboratorio), precio vigente y stock actual.</p>
+        <p class="motive"><strong>¿Qué resuelve?</strong> Sin catálogo, el médico escribiría el nombre del medicamento a mano en ItemReceta como texto libre. "Paracetamol", "paracetamol", "PARACETAMOL 500", "Panadol" serían entradas distintas para el mismo medicamento, imposibilitando control de stock.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> No se puede saber si hay stock suficiente antes de prescribir, ni calcular el costo total de una receta, ni generar órdenes de reposición automáticas.</p>
+        <div class="cols-pills"><span class="cpill pk">IdMedicamento PK</span><span class="cpill">Nombre</span><span class="cpill">Presentacion</span><span class="cpill">Precio</span><span class="cpill">Stock</span><span class="cpill">Activo</span></div>
+      </div>
+    </div>
+
+    <!-- ─ COMPROBANTE ─ -->
+    <div class="tabla-card">
+      <div class="tabla-card-hdr bg-violet"><span class="t-name">🧾 Comprobante</span><span class="t-badge">Financiero v3 · Grupo F</span></div>
+      <div class="tabla-card-body">
+        <p class="motive"><strong>¿Por qué existe?</strong> Documento fiscal (Boleta o Factura) generado por la consulta médica. Registra el monto, IGV, método de pago y estado (Pendiente/Pagado). 1:1 con Cita porque una consulta genera exactamente un comprobante.</p>
+        <p class="motive"><strong>¿Qué resuelve? (Obs. #7 + v3):</strong> Reemplaza la tabla Factura (solo facturas) con soporte para Boleta y Factura según TipoComprobante. En v3 incorpora MetodoPago, NroOperacion y FechaPago directamente, eliminando la complejidad de las tablas Pago y MetodoPago.</p>
+        <p class="motive"><strong>Sin esta tabla:</strong> No habría trazabilidad fiscal. Sin Comprobante no se puede auditar ingresos, calcular IGV mensual ni emitir reportes financieros para SUNAT.</p>
+        <div class="cols-pills"><span class="cpill pk">IdComprobante PK</span><span class="cpill fk">IdCita FK UQ</span><span class="cpill">TipoComprobante</span><span class="cpill">Serie</span><span class="cpill">Subtotal</span><span class="cpill">IGV</span><span class="cpill">Total</span><span class="cpill">MetodoPago</span><span class="cpill">FechaPago</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECCIÓN 5: STACK TECNOLÓGICO ══ -->
+<div class="seccion">
+  <div class="divider"></div>
+  <h2 class="seccion-title">⚙️ 5. Stack Tecnológico</h2>
   <p class="seccion-sub">Tecnologías utilizadas en el desarrollo del sistema</p>
 
   <div class="stack-grid">
