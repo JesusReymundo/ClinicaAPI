@@ -1,0 +1,282 @@
+/*
+ * ================================================================
+ * JDL Studio — Sistema de Gestión de Citas Médicas
+ * Curso   : Desarrollo de Servicios Web
+ * Ciclo   : 5to Ciclo — IDAT
+ * Grupo   : Grupo 1
+ * Integrantes:
+ *   - Jesus Reymundo Roman
+ *   - Leomarc Reyes Zarate
+ * ================================================================
+ */
+
+// ─── APLICACIÓN ───────────────────────────────────────────────
+
+application {
+    config {
+        baseName clinicaIDAT
+        applicationType monolith
+        packageName pe.idat.clinica
+        authenticationType jwt
+        buildTool maven
+        databaseType sql
+        devDatabaseType h2Memory
+        prodDatabaseType postgresql
+        clientFramework react
+        enableTranslation false
+        nativeLanguage es
+    }
+    entities *
+}
+
+// ─── CATÁLOGOS ────────────────────────────────────────────────
+
+entity Rol {
+    nombreRol   String required maxlength(50)
+    descripcion String maxlength(200)
+    activo      Boolean required
+}
+
+entity TipoDocumento {
+    codigo   String  required maxlength(10)
+    nombre   String  required maxlength(50)
+    longitud Integer
+    activo   Boolean required
+}
+
+entity Especialidad {
+    nombre      String  required maxlength(100)
+    descripcion String  maxlength(300)
+    activo      Boolean required
+}
+
+entity TipoAsegurado {
+    nombre String required maxlength(50)
+}
+
+entity Empresa {
+    razonSocial String  required maxlength(200)
+    ruc         String  required maxlength(11)
+    direccion   String  maxlength(200)
+    telefono    String  maxlength(20)
+    email       String  maxlength(150)
+    activo      Boolean required
+}
+
+entity EstadoCita {
+    nombre String required maxlength(50)
+}
+
+entity MetodoPago {
+    nombre String  required maxlength(50)
+    activo Boolean required
+}
+
+entity TipoConsulta {
+    nombre      String     required maxlength(50)
+    descripcion String     maxlength(200)
+    tarifaExtra BigDecimal
+}
+
+entity Consultorio {
+    nombre      String  required maxlength(100)
+    numero      String  required maxlength(10)
+    piso        String  maxlength(10)
+    descripcion String  maxlength(200)
+    capacidad   Integer required
+    telefono    String  maxlength(20)
+    activo      Boolean required
+}
+
+// ─── IDENTIDAD ────────────────────────────────────────────────
+
+entity Usuario {
+    nombres         String    required maxlength(100)
+    apellidos       String    required maxlength(100)
+    tipoDocumento   String    required maxlength(10)
+    numeroDocumento String    required maxlength(20)
+    fechaNacimiento LocalDate
+    genero          String    maxlength(1)
+    direccion       String    maxlength(200)
+    username        String    required maxlength(50)
+    passwordHash    String    required maxlength(256)
+    activo          Boolean   required
+}
+
+entity Contacto {
+    tipoContacto String  required maxlength(20)
+    valor        String  required maxlength(150)
+    esPrincipal  Boolean required
+}
+
+// ─── MÉDICOS ─────────────────────────────────────────────────
+
+entity Medico {
+    colegioMedico String  required maxlength(20)
+    activo        Boolean required
+}
+
+entity Tarifa {
+    monto       BigDecimal required
+    descripcion String     maxlength(200)
+    activo      Boolean    required
+}
+
+entity HorarioMedico {
+    diaSemana  Integer required
+    horaInicio String  required maxlength(5)
+    horaFin    String  required maxlength(5)
+    activo     Boolean required
+}
+
+// ─── PACIENTES ───────────────────────────────────────────────
+
+entity Paciente {
+    numeroSeguro   String  maxlength(50)
+    grupoSanguineo String  maxlength(5)
+    alergias       String  maxlength(500)
+    activo         Boolean required
+}
+
+entity Seguro {
+    nombreSeguro     String     required maxlength(100)
+    tipoCobertura    String     maxlength(50)
+    numeroPoliza     String     maxlength(50)
+    fechaVigencia    LocalDate
+    fechaVencimiento LocalDate
+    coberturaMax     BigDecimal
+    activo           Boolean    required
+}
+
+// ─── CITAS ───────────────────────────────────────────────────
+
+entity Cita {
+    fechaHora    ZonedDateTime required
+    motivo       String        required maxlength(300)
+    observaciones String       maxlength(500)
+}
+
+entity CancelacionCita {
+    motivo           String        maxlength(300)
+    canceladoPor     String        maxlength(50)
+    fechaCancelacion ZonedDateTime required
+}
+
+// ─── CLÍNICO ─────────────────────────────────────────────────
+
+entity Triaje {
+    peso               BigDecimal
+    talla              BigDecimal
+    presionSistolica   Integer
+    presionDiastolica  Integer
+    frecuenciaCardiaca Integer
+    temperatura        BigDecimal
+    saturacion         BigDecimal
+}
+
+entity Receta {
+    diagnostico  String        maxlength(500)
+    indicaciones String        maxlength(500)
+    fechaEmision ZonedDateTime required
+}
+
+entity Medicamento {
+    nombre        String     required maxlength(200)
+    presentacion  String     maxlength(100)
+    concentracion String     maxlength(50)
+    laboratorio   String     maxlength(100)
+    precio        BigDecimal required
+    stock         Integer    required
+    activo        Boolean    required
+}
+
+entity ItemReceta {
+    dosis     String  maxlength(100)
+    frecuencia String maxlength(100)
+    duracion  String  maxlength(50)
+    cantidad  Integer required
+}
+
+entity HistorialClinico {
+    diagnostico  String        maxlength(500)
+    tratamiento  String        maxlength(500)
+    evolucion    String        maxlength(500)
+    fechaRegistro ZonedDateTime required
+}
+
+// ─── FINANCIERO ───────────────────────────────────────────────
+
+entity Comprobante {
+    tipoComprobante String     required maxlength(20)
+    serie           String     required maxlength(5)
+    numero          String     required maxlength(20)
+    subtotal        BigDecimal required
+    igv             BigDecimal required
+    total           BigDecimal required
+    estadoPago      String     required maxlength(20)
+    fechaEmision    ZonedDateTime required
+}
+
+entity Pago {
+    monto        BigDecimal    required
+    nroOperacion String        maxlength(50)
+    fechaPago    ZonedDateTime required
+}
+
+// ─── RELACIONES ───────────────────────────────────────────────
+
+relationship ManyToOne {
+    // Identidad
+    Usuario{rol(nombreRol)}       to Rol
+    Contacto{usuario(username)}   to Usuario
+
+    // Paciente
+    Paciente{tipoAsegurado(nombre)} to TipoAsegurado
+    Paciente{empresa(razonSocial)}  to Empresa
+    Seguro{paciente}                to Paciente
+
+    // Médico
+    Tarifa{medico(colegioMedico)}      to Medico
+    Tarifa{especialidad(nombre)}       to Especialidad
+    HorarioMedico{medico(colegioMedico)} to Medico
+    HorarioMedico{consultorio(nombre)}   to Consultorio
+
+    // Cita
+    Cita{paciente}              to Paciente
+    Cita{medico(colegioMedico)} to Medico
+    Cita{especialidad(nombre)}  to Especialidad
+    Cita{tarifa}                to Tarifa
+    Cita{estadoCita(nombre)}    to EstadoCita
+    Cita{consultorio(nombre)}   to Consultorio
+    Cita{tipoConsulta(nombre)}  to TipoConsulta
+
+    // Clínico
+    HistorialClinico{paciente}  to Paciente
+    HistorialClinico{cita}      to Cita
+    ItemReceta{receta}          to Receta
+    ItemReceta{medicamento(nombre)} to Medicamento
+
+    // Financiero
+    Pago{metodoPago(nombre)} to MetodoPago
+}
+
+relationship OneToOne {
+    Medico{usuario(username)}       to Usuario
+    Paciente{usuario(username)}     to Usuario
+    CancelacionCita{cita}           to Cita
+    Triaje{cita}                    to Cita
+    Receta{cita}                    to Cita
+    Comprobante{cita}               to Cita
+    Pago{comprobante(numero)}       to Comprobante
+}
+
+// ─── CONFIGURACIÓN ────────────────────────────────────────────
+
+pagination Cita, Paciente, Medico, HistorialClinico, Comprobante with pagination
+pagination Receta, ItemReceta, Triaje, Seguro, Tarifa with pagination
+
+service all with serviceClass
+
+dto all with mapstruct
+
+filter Cita, Paciente, Medico, Especialidad, Comprobante
