@@ -103,9 +103,9 @@ body { background:#1a1a2e; font-family:'Segoe UI',sans-serif; overflow:hidden; c
 <body>
 
 <div id="toolbar">
-  <h1>🗃 ClinicaDB v2</h1>
+  <h1>🗃 ClinicaDB v3</h1>
   <span class="badge">26 tablas</span>
-  <span class="badge badge-green">27 relaciones FK</span>
+  <span class="badge badge-green">30 relaciones FK</span>
   <div class="sep"></div>
   <button class="tbtn" onclick="zoom(1.2)">＋ Zoom</button>
   <button class="tbtn" onclick="zoom(0.8)">－ Zoom</button>
@@ -141,8 +141,8 @@ body { background:#1a1a2e; font-family:'Segoe UI',sans-serif; overflow:hidden; c
 <div id="statusbar">
   <span>Zoom: <b id="zoomLabel">100%</b></span>
   <span>Tabla activa: <b id="activeTable">—</b></span>
-  <span id="relCount">Relaciones visibles: <b>27</b></span>
-  <span style="margin-left:auto">ClinicaDB v2 · .NET 8 · SQL Server · IDAT 5to Ciclo 2024</span>
+  <span id="relCount">Relaciones visibles: <b>30</b></span>
+  <span style="margin-left:auto">ClinicaDB v3 · .NET 8 · SQL Server · IDAT 5to Ciclo 2025</span>
 </div>
 
 <div id="tooltip"></div>
@@ -181,10 +181,16 @@ const TABLES = {
     {n:'IdEstadoCita', t:'INT',         pk:true},
     {n:'Nombre',        t:'VARCHAR(50)', nn:true, uq:true},
   ]},
-  MetodoPago:    { x:960,  y:40,  color:'#dc2626', cols:[
-    {n:'IdMetodoPago', t:'INT',         pk:true},
-    {n:'Nombre',        t:'VARCHAR(50)', nn:true, uq:true},
-    {n:'Activo',        t:'BIT',         nn:true},
+  Seguro:        { x:960,  y:40,  color:'#059669', cols:[
+    {n:'IdSeguro',              t:'INT',          pk:true},
+    {n:'NombreSeguro',          t:'VARCHAR(100)', nn:true, uq:true},
+    {n:'TipoCobertura',         t:'VARCHAR(50)'},
+    {n:'Descripcion',           t:'VARCHAR(200)'},
+    {n:'Activo',                t:'BIT',          nn:true},
+    {n:'FechaCreacion',         t:'DATETIME',     nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',     audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',           audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',           audit:true},
   ]},
   TipoConsulta:  { x:1195, y:40,  color:'#d97706', cols:[
     {n:'IdTipoConsulta', t:'INT',           pk:true},
@@ -252,18 +258,37 @@ const TABLES = {
     {n:'FechaCreacion', t:'DATETIME',     nn:true, audit:true},
   ]},
 
-  // ── MÉDICOS (fila 1 derecha) ──────────────────────────
-  Medico:        { x:490,  y:290, color:'#0284c7', cols:[
+  // ── MÉDICOS (fila 1, y=290) ──────────────────────────
+  Medico:           { x:490,  y:290, color:'#0284c7', cols:[
     {n:'IdMedico',              t:'INT',          pk:true},
     {n:'IdUsuario',             t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
-    {n:'ColegioMedico',         t:'VARCHAR(20)',  nn:true, uq:true},
     {n:'Activo',                t:'BIT',          nn:true},
     {n:'FechaCreacion',         t:'DATETIME',     nn:true, audit:true},
     {n:'FechaModificacion',     t:'DATETIME',     audit:true},
     {n:'IdUsuarioCreacion',     t:'INT',           audit:true},
     {n:'IdUsuarioModificacion', t:'INT',           audit:true},
   ]},
-  Tarifa:        { x:725,  y:290, color:'#0284c7', cols:[
+  ColegioMedico:    { x:725,  y:290, color:'#0284c7', cols:[
+    {n:'IdColegioMedico',       t:'INT',         pk:true},
+    {n:'IdMedico',              t:'INT',         fk:true, ref:'Medico.IdMedico', nn:true},
+    {n:'Numero',                t:'VARCHAR(20)', nn:true, uq:true},
+    {n:'Activo',                t:'BIT',         nn:true},
+    {n:'FechaCreacion',         t:'DATETIME',    nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME',    audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',          audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',          audit:true},
+  ]},
+  MedicoEspecialidad:{ x:960, y:290, color:'#0284c7', cols:[
+    {n:'IdMedicoEsp',           t:'INT',  pk:true},
+    {n:'IdMedico',              t:'INT',  fk:true, ref:'Medico.IdMedico', nn:true},
+    {n:'IdEspecialidad',        t:'INT',  fk:true, ref:'Especialidad.IdEspecialidad', nn:true},
+    {n:'Activo',                t:'BIT',  nn:true},
+    {n:'FechaCreacion',         t:'DATETIME', nn:true, audit:true},
+    {n:'FechaModificacion',     t:'DATETIME', audit:true},
+    {n:'IdUsuarioCreacion',     t:'INT',  audit:true},
+    {n:'IdUsuarioModificacion', t:'INT',  audit:true},
+  ]},
+  Tarifa:           { x:1195, y:290, color:'#0284c7', cols:[
     {n:'IdTarifa',              t:'INT',           pk:true},
     {n:'IdMedico',              t:'INT',           fk:true, ref:'Medico.IdMedico', nn:true},
     {n:'IdEspecialidad',        t:'INT',           fk:true, ref:'Especialidad.IdEspecialidad', nn:true},
@@ -275,7 +300,7 @@ const TABLES = {
     {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
     {n:'IdUsuarioModificacion', t:'INT',            audit:true},
   ]},
-  HorarioMedico: { x:960,  y:290, color:'#0284c7', cols:[
+  HorarioMedico:    { x:1430, y:290, color:'#0284c7', cols:[
     {n:'IdHorario',             t:'INT',      pk:true},
     {n:'IdMedico',              t:'INT',      fk:true, ref:'Medico.IdMedico', nn:true},
     {n:'IdConsultorio',         t:'INT',      fk:true, ref:'Consultorio.IdConsultorio'},
@@ -289,13 +314,12 @@ const TABLES = {
     {n:'IdUsuarioModificacion', t:'INT',       audit:true},
   ]},
 
-  // ── PACIENTES (fila 2, y=600) ─────────────────────────
-  Paciente:      { x:20,   y:640, color:'#059669', cols:[
+  // ── PACIENTES (fila 2, y=640) ─────────────────────────
+  Paciente:       { x:20,  y:640, color:'#059669', cols:[
     {n:'IdPaciente',            t:'INT',          pk:true},
     {n:'IdUsuario',             t:'INT',          fk:true, ref:'Usuario.IdUsuario', nn:true, uq:true},
     {n:'IdTipoAsegurado',       t:'INT',          fk:true, ref:'TipoAsegurado.IdTipoAsegurado', nn:true},
     {n:'IdEmpresa',             t:'INT',          fk:true, ref:'Empresa.IdEmpresa'},
-    {n:'NumeroSeguro',          t:'VARCHAR(50)'},
     {n:'GrupoSanguineo',        t:'VARCHAR(5)'},
     {n:'Alergias',              t:'VARCHAR(500)'},
     {n:'Activo',                t:'BIT',          nn:true},
@@ -304,16 +328,15 @@ const TABLES = {
     {n:'IdUsuarioCreacion',     t:'INT',           audit:true},
     {n:'IdUsuarioModificacion', t:'INT',           audit:true},
   ]},
-  Seguro:        { x:255,  y:640, color:'#059669', cols:[
-    {n:'IdSeguro',              t:'INT',           pk:true},
+  PacienteSeguro: { x:255, y:640, color:'#059669', cols:[
+    {n:'IdPacienteSeguro',      t:'INT',           pk:true},
     {n:'IdPaciente',            t:'INT',           fk:true, ref:'Paciente.IdPaciente', nn:true},
-    {n:'NombreSeguro',          t:'VARCHAR(100)',   nn:true},
-    {n:'TipoCobertura',         t:'VARCHAR(50)'},
+    {n:'IdSeguro',              t:'INT',           fk:true, ref:'Seguro.IdSeguro', nn:true},
     {n:'NumeroPoliza',          t:'VARCHAR(50)'},
-    {n:'FechaVigencia',         t:'DATE'},
+    {n:'FechaAfiliacion',       t:'DATE'},
     {n:'FechaVencimiento',      t:'DATE'},
     {n:'CoberturaMax',          t:'DECIMAL(10,2)'},
-    {n:'Activo',                t:'BIT',           nn:true},
+    {n:'EsActivo',              t:'BIT',           nn:true},
     {n:'FechaCreacion',         t:'DATETIME',      nn:true, audit:true},
     {n:'FechaModificacion',     t:'DATETIME',      audit:true},
     {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
@@ -414,50 +437,49 @@ const TABLES = {
     {n:'Total',                 t:'DECIMAL(10,2)', nn:true},
     {n:'EstadoPago',            t:'VARCHAR(20)',   nn:true},
     {n:'FechaEmision',          t:'DATETIME',      nn:true},
+    {n:'MetodoPago',            t:'VARCHAR(50)'},
+    {n:'NroOperacion',          t:'VARCHAR(50)'},
+    {n:'FechaPago',             t:'DATETIME'},
     {n:'IdUsuarioCreacion',     t:'INT',            audit:true},
     {n:'IdUsuarioModificacion', t:'INT',            audit:true},
-  ]},
-  Pago:          { x:1430, y:1040, color:'#7c3aed', cols:[
-    {n:'IdPago',            t:'INT',           pk:true},
-    {n:'IdComprobante',      t:'INT',           fk:true, ref:'Comprobante.IdComprobante', nn:true},
-    {n:'IdMetodoPago',      t:'INT',           fk:true, ref:'MetodoPago.IdMetodoPago', nn:true},
-    {n:'Monto',              t:'DECIMAL(10,2)', nn:true},
-    {n:'NroOperacion',      t:'VARCHAR(50)'},
-    {n:'FechaPago',         t:'DATETIME',      nn:true},
-    {n:'IdUsuarioCreacion', t:'INT',            audit:true},
   ]},
 };
 
 const RELS = [
-  // cardinalidad: '1N' = uno a muchos, '11' = uno a uno, 'NM' = many-to-many bridge
-  {from:'Usuario',         fc:'IdRol',          to:'Rol',            tc:'IdRol',          card:'N1'},
-  {from:'Contacto',        fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'N1'},
-  {from:'Medico',          fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'11'},
-  {from:'Paciente',        fc:'IdUsuario',       to:'Usuario',        tc:'IdUsuario',      card:'11'},
-  {from:'Paciente',        fc:'IdTipoAsegurado', to:'TipoAsegurado',  tc:'IdTipoAsegurado',card:'N1'},
-  {from:'Paciente',        fc:'IdEmpresa',       to:'Empresa',        tc:'IdEmpresa',      card:'N1'},
-  {from:'Tarifa',          fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
-  {from:'Tarifa',          fc:'IdEspecialidad',  to:'Especialidad',   tc:'IdEspecialidad', card:'N1'},
-  {from:'HorarioMedico',   fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
-  {from:'HorarioMedico',   fc:'IdConsultorio',   to:'Consultorio',    tc:'IdConsultorio',  card:'N1'},
-  {from:'Cita',            fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
-  {from:'Cita',            fc:'IdMedico',        to:'Medico',         tc:'IdMedico',       card:'N1'},
-  {from:'Cita',            fc:'IdEspecialidad',  to:'Especialidad',   tc:'IdEspecialidad', card:'N1'},
-  {from:'Cita',            fc:'IdTarifa',        to:'Tarifa',         tc:'IdTarifa',       card:'N1'},
-  {from:'Cita',            fc:'IdEstadoCita',    to:'EstadoCita',     tc:'IdEstadoCita',   card:'N1'},
-  {from:'Cita',            fc:'IdConsultorio',   to:'Consultorio',    tc:'IdConsultorio',  card:'N1'},
-  {from:'Cita',            fc:'IdTipoConsulta',  to:'TipoConsulta',   tc:'IdTipoConsulta', card:'N1'},
-  {from:'CancelacionCita', fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
-  {from:'Seguro',          fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
-  {from:'Comprobante',     fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
-  {from:'Pago',            fc:'IdComprobante',   to:'Comprobante',    tc:'IdComprobante',  card:'N1'},
-  {from:'Pago',            fc:'IdMetodoPago',    to:'MetodoPago',     tc:'IdMetodoPago',   card:'N1'},
-  {from:'Triaje',          fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
-  {from:'HistorialClinico',fc:'IdPaciente',      to:'Paciente',       tc:'IdPaciente',     card:'N1'},
-  {from:'HistorialClinico',fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'N1'},
-  {from:'Receta',          fc:'IdCita',          to:'Cita',           tc:'IdCita',         card:'11'},
-  {from:'ItemReceta',      fc:'IdReceta',        to:'Receta',         tc:'IdReceta',       card:'N1'},
-  {from:'ItemReceta',      fc:'IdMedicamento',   to:'Medicamento',    tc:'IdMedicamento',  card:'N1'},
+  // cardinalidad: 'N1' = muchos a uno, '11' = uno a uno
+  {from:'Usuario',            fc:'IdRol',          to:'Rol',              tc:'IdRol',            card:'N1'},
+  {from:'Contacto',           fc:'IdUsuario',       to:'Usuario',          tc:'IdUsuario',        card:'N1'},
+  {from:'Medico',             fc:'IdUsuario',       to:'Usuario',          tc:'IdUsuario',        card:'11'},
+  {from:'Paciente',           fc:'IdUsuario',       to:'Usuario',          tc:'IdUsuario',        card:'11'},
+  {from:'Paciente',           fc:'IdTipoAsegurado', to:'TipoAsegurado',    tc:'IdTipoAsegurado',  card:'N1'},
+  {from:'Paciente',           fc:'IdEmpresa',       to:'Empresa',          tc:'IdEmpresa',        card:'N1'},
+  // v3 — Médicos (tablas nuevas)
+  {from:'ColegioMedico',      fc:'IdMedico',        to:'Medico',           tc:'IdMedico',         card:'N1'},
+  {from:'MedicoEspecialidad', fc:'IdMedico',        to:'Medico',           tc:'IdMedico',         card:'N1'},
+  {from:'MedicoEspecialidad', fc:'IdEspecialidad',  to:'Especialidad',     tc:'IdEspecialidad',   card:'N1'},
+  {from:'Tarifa',             fc:'IdMedico',        to:'Medico',           tc:'IdMedico',         card:'N1'},
+  {from:'Tarifa',             fc:'IdEspecialidad',  to:'Especialidad',     tc:'IdEspecialidad',   card:'N1'},
+  {from:'HorarioMedico',      fc:'IdMedico',        to:'Medico',           tc:'IdMedico',         card:'N1'},
+  {from:'HorarioMedico',      fc:'IdConsultorio',   to:'Consultorio',      tc:'IdConsultorio',    card:'N1'},
+  // v3 — PacienteSeguro (tabla intermedia)
+  {from:'PacienteSeguro',     fc:'IdPaciente',      to:'Paciente',         tc:'IdPaciente',       card:'N1'},
+  {from:'PacienteSeguro',     fc:'IdSeguro',        to:'Seguro',           tc:'IdSeguro',         card:'N1'},
+  // Cita (sin cambios)
+  {from:'Cita',               fc:'IdPaciente',      to:'Paciente',         tc:'IdPaciente',       card:'N1'},
+  {from:'Cita',               fc:'IdMedico',        to:'Medico',           tc:'IdMedico',         card:'N1'},
+  {from:'Cita',               fc:'IdEspecialidad',  to:'Especialidad',     tc:'IdEspecialidad',   card:'N1'},
+  {from:'Cita',               fc:'IdTarifa',        to:'Tarifa',           tc:'IdTarifa',         card:'N1'},
+  {from:'Cita',               fc:'IdEstadoCita',    to:'EstadoCita',       tc:'IdEstadoCita',     card:'N1'},
+  {from:'Cita',               fc:'IdConsultorio',   to:'Consultorio',      tc:'IdConsultorio',    card:'N1'},
+  {from:'Cita',               fc:'IdTipoConsulta',  to:'TipoConsulta',     tc:'IdTipoConsulta',   card:'N1'},
+  {from:'CancelacionCita',    fc:'IdCita',          to:'Cita',             tc:'IdCita',           card:'11'},
+  {from:'Comprobante',        fc:'IdCita',          to:'Cita',             tc:'IdCita',           card:'11'},
+  {from:'Triaje',             fc:'IdCita',          to:'Cita',             tc:'IdCita',           card:'11'},
+  {from:'HistorialClinico',   fc:'IdPaciente',      to:'Paciente',         tc:'IdPaciente',       card:'N1'},
+  {from:'HistorialClinico',   fc:'IdCita',          to:'Cita',             tc:'IdCita',           card:'N1'},
+  {from:'Receta',             fc:'IdCita',          to:'Cita',             tc:'IdCita',           card:'11'},
+  {from:'ItemReceta',         fc:'IdReceta',        to:'Receta',           tc:'IdReceta',         card:'N1'},
+  {from:'ItemReceta',         fc:'IdMedicamento',   to:'Medicamento',      tc:'IdMedicamento',    card:'N1'},
 ];
 
 /* ═══════════════════════════════════════════════════

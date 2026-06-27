@@ -137,23 +137,23 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
 <!-- ══ PORTADA ══ -->
 <div class="portada">
   <div class="portada-logo">🏥</div>
-  <h1>Diagrama Entidad-Relación — ClinicaDB v2</h1>
+  <h1>Diagrama Entidad-Relación — ClinicaDB v3</h1>
   <p class="sub">Sistema de Gestión de Citas Médicas · Análisis Completo de Tablas, Relaciones y Arquitectura</p>
-  <p class="sub2">IDAT · 5to Ciclo · Desarrollo de Servicios Web · .NET 8 · SQL Server · 2024</p>
+  <p class="sub2">IDAT · 5to Ciclo · Desarrollo de Servicios Web · .NET 8 · SQL Server · 2025</p>
   <div class="meta">
     <div class="meta-item"><div class="meta-num">26</div><div class="meta-lab">Tablas</div></div>
-    <div class="meta-item"><div class="meta-num">27</div><div class="meta-lab">Relaciones FK</div></div>
+    <div class="meta-item"><div class="meta-num">30</div><div class="meta-lab">Relaciones FK</div></div>
     <div class="meta-item"><div class="meta-num">6</div><div class="meta-lab">Grupos</div></div>
     <div class="meta-item"><div class="meta-num">100+</div><div class="meta-lab">Registros Seed</div></div>
-    <div class="meta-item"><div class="meta-num">8</div><div class="meta-lab">Obs. Aplicadas</div></div>
+    <div class="meta-item"><div class="meta-num">13</div><div class="meta-lab">Obs. Aplicadas</div></div>
   </div>
-  <div class="portada-badge">Esquema v2 · Todas las observaciones del profesor aplicadas</div>
+  <div class="portada-badge">Esquema v3 · Todas las observaciones del profesor aplicadas</div>
 </div>
 
 <!-- ══ SECCIÓN 1: OBSERVACIONES DEL PROFESOR ══ -->
 <div class="seccion gray">
   <div class="divider"></div>
-  <h2 class="seccion-title">🎓 1. Observaciones del Profesor — Cambios Aplicados en v2</h2>
+  <h2 class="seccion-title">🎓 1. Observaciones del Profesor — Cambios Aplicados en v2 y v3</h2>
   <p class="seccion-sub">Todas las mejoras fueron implementadas en el esquema SQL, los modelos C# y el SeedData</p>
 
   <div class="obs-grid">
@@ -240,13 +240,76 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
     </div>
 
   </div>
+
+  <!-- NUEVAS OBSERVACIONES v3 -->
+  <div style="margin-top:24px;padding:12px 18px;background:#fffbeb;border-radius:10px;border:2px solid #fcd34d;font-size:12px;color:#92400e;font-weight:600">
+    ⚡ v3 — 5 observaciones adicionales del profesor aplicadas al esquema
+  </div>
+  <div class="obs-grid" style="margin-top:16px">
+
+    <div class="obs-card" style="border-color:#059669">
+      <span class="badge" style="background:#d1fae5;color:#065f46">OBS #9 — v3</span>
+      <h4>Seguro como catálogo independiente de aseguradoras</h4>
+      <p>La tabla Seguro era un registro por paciente. Ahora es un catálogo de aseguradoras (EsSalud, SIS, Rímac, Pacífico, etc.) que existen independientemente de los pacientes.</p>
+      <p style="margin-top:6px">
+        <span class="obs-before">Seguro con IdPaciente FK — cada seguro pertenece a 1 paciente</span><br>
+        <span class="obs-after">Seguro = catálogo sin FK a Paciente · NombreSeguro UNIQUE · Relación via PacienteSeguro</span>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:#065f46"><strong>Justificación:</strong> Las aseguradoras son entidades externas preexistentes. Si 500 pacientes tienen EsSalud, no se duplica el nombre "EsSalud" 500 veces — existe una sola vez en el catálogo y se referencia con FK desde PacienteSeguro. Además, permite filtrar todos los pacientes por aseguradora sin texto libre.</p>
+    </div>
+
+    <div class="obs-card" style="border-color:#059669">
+      <span class="badge" style="background:#d1fae5;color:#065f46">OBS #10 — v3</span>
+      <h4>Tabla intermedia PacienteSeguro — Relación M:N entre Paciente y Seguro</h4>
+      <p>Se eliminó el campo NumeroSeguro de Paciente y la FK directa de Seguro→Paciente. La nueva tabla PacienteSeguro registra la cobertura individualizada por cada contrato.</p>
+      <p style="margin-top:6px">
+        <span class="obs-before">Seguro.IdPaciente FK (máximo 1 seguro activo) · NumeroSeguro en Paciente</span><br>
+        <span class="obs-after">PacienteSeguro: IdPaciente FK + IdSeguro FK + NumeroPoliza + FechaAfiliacion + FechaVencimiento + CoberturaMax + EsActivo</span>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:#065f46"><strong>Justificación:</strong> Un paciente puede tener EsSalud + Rímac + SIS simultáneamente. Con la tabla intermedia se almacena el número de póliza individual, fechas de vigencia y cobertura máxima por contrato. Esto es imposible con una FK directa. La columna EsActivo permite suspender coberturas sin eliminar el historial.</p>
+    </div>
+
+    <div class="obs-card" style="border-color:#0284c7">
+      <span class="badge" style="background:#dbeafe;color:#1d4ed8">OBS #11 — v3</span>
+      <h4>ColegioMedico como tabla separada (médico puede tener varios registros)</h4>
+      <p>El número de colegio médico salió de la tabla Medico (VARCHAR fijo) y se convirtió en tabla propia para soportar múltiples registros por médico.</p>
+      <p style="margin-top:6px">
+        <span class="obs-before">Medico.ColegioMedico VARCHAR(20) UNIQUE — solo 1 registro, no se puede historizar</span><br>
+        <span class="obs-after">Tabla ColegioMedico: IdColegioMedico PK + IdMedico FK + Numero UQ + Activo + auditoría</span>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:#1d4ed8"><strong>Justificación:</strong> La normativa del CMP (Colegio Médico del Perú) permite que un médico tenga registros en diferentes regiones (Lima, Callao, Arequipa). Con campo en Medico solo se almacena uno. Con tabla separada se pueden registrar todos, inactivar los caducados y mantener historial. También facilita validaciones automáticas por número de colegiatura.</p>
+    </div>
+
+    <div class="obs-card" style="border-color:#0284c7">
+      <span class="badge" style="background:#dbeafe;color:#1d4ed8">OBS #12 — v3</span>
+      <h4>MedicoEspecialidad — habilitación formal Médico ↔ Especialidad</h4>
+      <p>La conexión entre médico y especialidad era implícita (solo existía si había tarifa). Se añade tabla dedicada para registrar formalmente las especialidades que ejerce cada médico.</p>
+      <p style="margin-top:6px">
+        <span class="obs-before">Sin tabla directa — la especialidad del médico se infería por sus Tarifas</span><br>
+        <span class="obs-after">MedicoEspecialidad: IdMedicoEsp PK + IdMedico FK + IdEspecialidad FK + Activo + auditoría · UQ (IdMedico, IdEspecialidad)</span>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:#1d4ed8"><strong>Justificación:</strong> Un médico puede estar habilitado para atender Cardiología sin que se le haya configurado tarifa aún. Con MedicoEspecialidad se registran las certificaciones oficiales con restricción de unicidad por par (médico, especialidad). Permite validar en Cita que el médico asignado realmente ejerce la especialidad seleccionada, evitando errores de asignación.</p>
+    </div>
+
+    <div class="obs-card" style="border-color:#7c3aed">
+      <span class="badge" style="background:#ede9fe;color:#6b21a8">OBS #13 — v3</span>
+      <h4>Eliminar Pago y MetodoPago — simplificar flujo financiero</h4>
+      <p>Las tablas Pago y MetodoPago fueron eliminadas. Sus datos esenciales (MetodoPago, NroOperacion, FechaPago) se incorporaron directamente en Comprobante.</p>
+      <p style="margin-top:6px">
+        <span class="obs-before">3 tablas: Comprobante → Pago → MetodoPago · MetodoPago era catálogo separado</span><br>
+        <span class="obs-after">1 tabla: Comprobante con campos MetodoPago VARCHAR(50), NroOperacion VARCHAR(50), FechaPago DATETIME</span>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:#6b21a8"><strong>Justificación:</strong> En una clínica de este tamaño, 1 cita = 1 comprobante = 1 pago único. No hay pagos parciales ni en cuotas. Mantener Pago y MetodoPago como tablas separadas solo agrega 2 JOINs extra en cada consulta financiera. Al integrar los campos en Comprobante se simplifica el modelo sin perder información, se eliminan JOINs innecesarios y el catálogo de métodos se reemplaza por un enum ('Efectivo', 'Tarjeta', 'Transferencia', 'Yape', 'Plin').</p>
+    </div>
+
+  </div>
 </div>
 
 <!-- ══ SECCIÓN 2: DIAGRAMA DE GRUPOS ══ -->
 <div class="seccion">
   <div class="divider"></div>
   <h2 class="seccion-title">🗃 2. Estructura de la Base de Datos — 26 Tablas en 6 Grupos</h2>
-  <p class="seccion-sub">Organización funcional del esquema ClinicaDB v2 · Nombres en SINGULAR · Campos de auditoría en cada tabla</p>
+  <p class="seccion-sub">Organización funcional del esquema ClinicaDB v3 · Nombres en SINGULAR · Campos de auditoría en cada tabla</p>
 
   <div class="leyenda">
     <div class="ley" style="background:#ede9fe;color:#6b21a8;border-color:#c4b5fd">🟣 Catálogos e Identidad</div>
@@ -331,11 +394,40 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
         </div>
 
         <div class="db-table">
-          <div class="db-hdr bg-blue">👨‍⚕️ Medico <span class="cnt">8 cols</span></div>
+          <div class="db-hdr bg-blue">👨‍⚕️ Medico <span class="cnt">7 cols</span></div>
           <div>
             <div class="db-row pk"><span class="col-name">IdMedico</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
             <div class="db-row fk"><span class="col-name">IdUsuario</span><span class="col-type">INT → Usuario</span><span class="tag tag-fk">FK</span><span class="tag tag-uq">UQ</span></div>
-            <div class="db-row"><span class="col-name">ColegioMedico</span><span class="col-type">VARCHAR(20)</span><span class="tag tag-uq">UQ</span></div>
+            <div class="db-row"><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+            <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="col-type">DATETIME / INT</span><span class="tag tag-aud">AUD</span></div>
+          </div>
+        </div>
+
+        <div style="background:#dbeafe;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:11px;color:#1d4ed8;font-weight:600">
+          🌟 Nueva Tabla — Obs. Profesor #11 (v3)
+        </div>
+
+        <div class="db-table" style="border:2px solid #0284c7">
+          <div class="db-hdr bg-blue">🏥 ColegioMedico (v3 ★) <span class="cnt">8 cols</span></div>
+          <div>
+            <div class="db-row pk"><span class="col-name">IdColegioMedico</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
+            <div class="db-row fk"><span class="col-name">IdMedico</span><span class="col-type">INT → Medico</span><span class="tag tag-fk">FK</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">Numero ★</span><span class="col-type">VARCHAR(20)</span><span class="tag tag-uq">UQ</span></div>
+            <div class="db-row"><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+            <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="col-type">DATETIME / INT</span><span class="tag tag-aud">AUD</span></div>
+          </div>
+        </div>
+
+        <div style="background:#dbeafe;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:11px;color:#1d4ed8;font-weight:600">
+          🌟 Nueva Tabla — Obs. Profesor #12 (v3)
+        </div>
+
+        <div class="db-table" style="border:2px solid #0284c7">
+          <div class="db-hdr bg-blue">🔗 MedicoEspecialidad (v3 ★) <span class="cnt">8 cols</span></div>
+          <div>
+            <div class="db-row pk"><span class="col-name">IdMedicoEsp</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
+            <div class="db-row fk"><span class="col-name">IdMedico</span><span class="col-type">INT → Medico</span><span class="tag tag-fk">FK</span></div>
+            <div class="db-row fk"><span class="col-name">IdEspecialidad</span><span class="col-type">INT → Especialidad</span><span class="tag tag-fk">FK</span></div>
             <div class="db-row"><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
             <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="col-type">DATETIME / INT</span><span class="tag tag-aud">AUD</span></div>
           </div>
@@ -405,31 +497,50 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
         </div>
 
         <div class="db-table">
-          <div class="db-hdr bg-green">🧑 Paciente <span class="cnt">12 cols</span></div>
+          <div class="db-hdr bg-green">🧑 Paciente <span class="cnt">11 cols</span></div>
           <div>
             <div class="db-row pk"><span class="col-name">IdPaciente</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
             <div class="db-row fk"><span class="col-name">IdUsuario</span><span class="col-type">INT → Usuario</span><span class="tag tag-fk">FK</span><span class="tag tag-uq">UQ</span></div>
             <div class="db-row fk"><span class="col-name">IdTipoAsegurado</span><span class="col-type">INT → TipoAsegurado</span><span class="tag tag-fk">FK</span></div>
             <div class="db-row fk"><span class="col-name">IdEmpresa</span><span class="col-type">INT → Empresa (NULL)</span><span class="tag tag-fk">FK</span></div>
-            <div class="db-row"><span class="col-name">NumeroSeguro</span><span class="col-type">VARCHAR(50)</span></div>
             <div class="db-row"><span class="col-name">GrupoSanguineo</span><span class="col-type">VARCHAR(5)</span></div>
             <div class="db-row"><span class="col-name">Alergias</span><span class="col-type">VARCHAR(500)</span></div>
             <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="tag tag-aud">AUD</span></div>
           </div>
         </div>
 
+        <div style="background:#d1fae5;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:11px;color:#065f46;font-weight:600">
+          🌟 Catálogo de aseguradoras — Obs. Profesor #9 (v3)
+        </div>
+
         <div class="db-table">
-          <div class="db-hdr bg-green">🛡 Seguro (mejorado ★) <span class="cnt">13 cols</span></div>
+          <div class="db-hdr bg-green">🛡 Seguro — Catálogo (v3 ★) <span class="cnt">9 cols</span></div>
           <div>
             <div class="db-row pk"><span class="col-name">IdSeguro</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">NombreSeguro ★</span><span class="col-type">VARCHAR(100)</span><span class="tag tag-uq">UQ</span></div>
+            <div class="db-row"><span class="col-name">TipoCobertura</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row"><span class="col-name">Descripcion</span><span class="col-type">VARCHAR(200)</span></div>
+            <div class="db-row"><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
+            <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="tag tag-aud">AUD</span></div>
+          </div>
+        </div>
+
+        <div style="background:#d1fae5;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:11px;color:#065f46;font-weight:600">
+          🌟 Nueva Tabla Intermedia — Obs. Profesor #10 (v3)
+        </div>
+
+        <div class="db-table" style="border:2px solid #059669">
+          <div class="db-hdr bg-green">🔗 PacienteSeguro (M:N v3 ★) <span class="cnt">12 cols</span></div>
+          <div>
+            <div class="db-row pk"><span class="col-name">IdPacienteSeguro</span><span class="col-type">INT</span><span class="tag tag-pk">PK</span></div>
             <div class="db-row fk"><span class="col-name">IdPaciente</span><span class="col-type">INT → Paciente</span><span class="tag tag-fk">FK</span></div>
-            <div class="db-row"><span class="col-name">NombreSeguro</span><span class="col-type">VARCHAR(100)</span></div>
-            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309">TipoCobertura ★</span><span class="col-type">VARCHAR(50)</span></div>
-            <div class="db-row"><span class="col-name">NumeroPoliza</span><span class="col-type">VARCHAR(50)</span></div>
-            <div class="db-row"><span class="col-name">FechaVigencia</span><span class="col-type">DATE</span></div>
-            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309">FechaVencimiento ★</span><span class="col-type">DATE</span></div>
-            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309">CoberturaMax ★</span><span class="col-type">DECIMAL(10,2)</span></div>
-            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309">Activo ★</span><span class="col-type">BIT</span></div>
+            <div class="db-row fk"><span class="col-name">IdSeguro</span><span class="col-type">INT → Seguro</span><span class="tag tag-fk">FK</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">NumeroPoliza ★</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">FechaAfiliacion ★</span><span class="col-type">DATE</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">FechaVencimiento ★</span><span class="col-type">DATE</span></div>
+            <div class="db-row" style="background:#fffbeb"><span class="col-name" style="color:#b45309;font-weight:700">CoberturaMax ★</span><span class="col-type">DECIMAL(10,2)</span></div>
+            <div class="db-row"><span class="col-name">EsActivo</span><span class="col-type">BIT</span><span class="tag tag-nn">NN</span></div>
+            <div class="db-row aud"><span class="col-name">Auditoría ×4</span><span class="tag tag-aud">AUD</span></div>
           </div>
         </div>
       </div>
@@ -562,14 +673,14 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
 
       <!-- GRUPO F: FINANCIERO -->
       <div class="grupo col2" style="border-color:#c4b5fd">
-        <div class="grupo-title">🟣 Grupo F — Financiero (Comprobante + Pago)</div>
+        <div class="grupo-title">🟣 Grupo F — Financiero (Comprobante)</div>
 
         <div style="background:#ede9fe;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#6b21a8;font-weight:600">
-          ★ Obs. Profesor #7: Reemplaza tabla Factura — soporta Boleta y Factura
+          ★ Obs. #7: Reemplaza tabla Factura · ★ Obs. #13 (v3): Eliminadas tablas Pago y MetodoPago
         </div>
 
         <div class="db-table" style="border:2px solid #7c3aed">
-          <div class="db-hdr bg-violet">🧾 Comprobante (Boleta/Factura ★) <span class="cnt">12 cols</span></div>
+          <div class="db-hdr bg-violet">🧾 Comprobante (v3 simplificado ★) <span class="cnt">15 cols</span></div>
           <div>
             <div class="db-row pk"><span class="col-name">IdComprobante</span><span class="tag tag-pk">PK</span></div>
             <div class="db-row fk"><span class="col-name">IdCita</span><span class="col-type">→ Cita (UQ)</span><span class="tag tag-fk">FK</span></div>
@@ -578,29 +689,17 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
             <div class="db-row"><span class="col-name">Subtotal, IGV, Total</span><span class="col-type">DECIMAL(10,2)</span></div>
             <div class="db-row"><span class="col-name">EstadoPago</span><span class="col-type">'Pendiente'/'Pagado'</span></div>
             <div class="db-row"><span class="col-name">FechaEmision</span><span class="col-type">DATETIME</span></div>
+            <div class="db-row" style="background:#d1fae5"><span class="col-name" style="color:#065f46;font-weight:700">MetodoPago ★ v3</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row" style="background:#d1fae5"><span class="col-name" style="color:#065f46;font-weight:700">NroOperacion ★ v3</span><span class="col-type">VARCHAR(50)</span></div>
+            <div class="db-row" style="background:#d1fae5"><span class="col-name" style="color:#065f46;font-weight:700">FechaPago ★ v3</span><span class="col-type">DATETIME</span></div>
             <div class="db-row aud"><span class="col-name">Auditoría ×2</span><span class="tag tag-aud">AUD</span></div>
           </div>
         </div>
 
-        <div class="db-table">
-          <div class="db-hdr bg-violet">💳 Pago <span class="cnt">7 cols</span></div>
-          <div>
-            <div class="db-row pk"><span class="col-name">IdPago</span><span class="tag tag-pk">PK</span></div>
-            <div class="db-row fk"><span class="col-name">IdComprobante</span><span class="col-type">→ Comprobante</span><span class="tag tag-fk">FK</span></div>
-            <div class="db-row fk"><span class="col-name">IdMetodoPago</span><span class="col-type">→ MetodoPago</span><span class="tag tag-fk">FK</span></div>
-            <div class="db-row"><span class="col-name">Monto</span><span class="col-type">DECIMAL(10,2)</span></div>
-            <div class="db-row"><span class="col-name">NroOperacion</span><span class="col-type">VARCHAR(50)</span></div>
-            <div class="db-row"><span class="col-name">FechaPago</span><span class="col-type">DATETIME</span></div>
-          </div>
-        </div>
-
-        <div class="db-table">
-          <div class="db-hdr bg-red">💵 MetodoPago <span class="cnt">3 cols</span></div>
-          <div>
-            <div class="db-row pk"><span class="col-name">IdMetodoPago</span><span class="tag tag-pk">PK</span></div>
-            <div class="db-row"><span class="col-name">Nombre</span><span class="col-type">VARCHAR(50)</span><span class="tag tag-uq">UQ</span></div>
-            <div class="db-row"><span class="col-name">Activo</span><span class="col-type">BIT</span></div>
-          </div>
+        <div style="background:#fee2e2;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#991b1b">
+          <strong>❌ Eliminadas en v3:</strong> Tablas <code>Pago</code> y <code>MetodoPago</code> — sus datos se integraron en Comprobante.
+          Un comprobante = un pago único. El método de pago es ahora un campo texto
+          ('Efectivo', 'Tarjeta', 'Yape', 'Plin', 'Transferencia').
         </div>
       </div>
 
@@ -611,41 +710,44 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
 <!-- ══ SECCIÓN 3: TABLA DE RELACIONES ══ -->
 <div class="seccion gray">
   <div class="divider"></div>
-  <h2 class="seccion-title">🔗 3. Tabla Completa de Relaciones (27 FKs)</h2>
-  <p class="seccion-sub">Todas las dependencias entre tablas con tipo de cardinalidad y descripción funcional</p>
+  <h2 class="seccion-title">🔗 3. Tabla Completa de Relaciones (30 FKs — v3)</h2>
+  <p class="seccion-sub">Todas las dependencias entre tablas con tipo de cardinalidad, descripción funcional y justificación técnica</p>
 
   <table class="rel-table">
     <thead>
-      <tr><th>#</th><th>Tabla Origen</th><th>Columna FK</th><th>Tabla Destino</th><th>Cardinalidad</th><th>Descripción</th></tr>
+      <tr><th>#</th><th>Tabla Origen</th><th>Columna FK</th><th>Tabla Destino</th><th>Cardinalidad</th><th>Descripción y Justificación</th></tr>
     </thead>
     <tbody>
-      <tr><td>1</td><td class="ta">Usuario</td><td>IdRol</td><td class="tb">Rol</td><td><span class="badge-1n">N:1</span></td><td>Muchos usuarios pueden tener el mismo rol</td></tr>
-      <tr><td>2</td><td class="ta">Contacto</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-1n">N:1</span></td><td>Un usuario puede tener múltiples contactos (tel/email)</td></tr>
-      <tr><td>3</td><td class="ta">Medico</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-11">1:1</span></td><td>Cada médico es exactamente un usuario del sistema</td></tr>
-      <tr><td>4</td><td class="ta">Paciente</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-11">1:1</span></td><td>Cada paciente es exactamente un usuario del sistema</td></tr>
-      <tr><td>5</td><td class="ta">Paciente</td><td>IdTipoAsegurado</td><td class="tb">TipoAsegurado</td><td><span class="badge-1n">N:1</span></td><td>Tipo de aseguramiento del paciente</td></tr>
-      <tr><td>6</td><td class="ta">Paciente</td><td>IdEmpresa</td><td class="tb">Empresa</td><td><span class="badge-1n">N:1</span></td><td>Empresa aseguradora (opcional, solo corporativo)</td></tr>
-      <tr><td>7</td><td class="ta">Tarifa</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico puede tener tarifas para distintas especialidades</td></tr>
-      <tr><td>8</td><td class="ta">Tarifa</td><td>IdEspecialidad</td><td class="tb">Especialidad</td><td><span class="badge-1n">N:1</span></td><td>Cada tarifa pertenece a una especialidad</td></tr>
-      <tr><td>9</td><td class="ta">HorarioMedico</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico tiene múltiples horarios por día</td></tr>
-      <tr><td>10</td><td class="ta">HorarioMedico</td><td>IdConsultorio</td><td class="tb">Consultorio</td><td><span class="badge-1n">N:1</span></td><td>Asignación de consultorio por horario</td></tr>
-      <tr><td>11</td><td class="ta">Seguro</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td>Un paciente puede tener múltiples seguros</td></tr>
-      <tr><td>12</td><td class="ta">Cita</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td>Un paciente puede tener muchas citas</td></tr>
-      <tr><td>13</td><td class="ta">Cita</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico puede atender muchas citas</td></tr>
-      <tr><td>14</td><td class="ta">Cita</td><td>IdEspecialidad ★</td><td class="tb">Especialidad</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo:</strong> Especialidad consultada en la cita</td></tr>
-      <tr><td>15</td><td class="ta">Cita</td><td>IdTarifa</td><td class="tb">Tarifa</td><td><span class="badge-1n">N:1</span></td><td>Tarifa aplicada en la cita (puede ser NULL)</td></tr>
-      <tr><td>16</td><td class="ta">Cita</td><td>IdEstadoCita</td><td class="tb">EstadoCita</td><td><span class="badge-1n">N:1</span></td><td>Estado actual: Pendiente/Confirmada/Cancelada/etc.</td></tr>
-      <tr><td>17</td><td class="ta">Cita</td><td>IdConsultorio</td><td class="tb">Consultorio</td><td><span class="badge-1n">N:1</span></td><td>Consultorio asignado a la cita</td></tr>
-      <tr><td>18</td><td class="ta">Cita</td><td>IdTipoConsulta</td><td class="tb">TipoConsulta</td><td><span class="badge-1n">N:1</span></td><td>Primera vez, seguimiento o urgencia</td></tr>
-      <tr><td>19</td><td class="ta">CancelacionCita</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Registro del motivo de cancelación o anulación</td></tr>
-      <tr><td>20</td><td class="ta">Triaje</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Signos vitales tomados antes de la consulta</td></tr>
-      <tr><td>21</td><td class="ta">HistorialClinico</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td>Historial acumulado por paciente</td></tr>
-      <tr><td>22</td><td class="ta">HistorialClinico</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-1n">N:1</span></td><td>Entrada de historial vinculada a una cita específica</td></tr>
-      <tr><td>23</td><td class="ta">Receta</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Una cita puede generar una receta médica</td></tr>
-      <tr><td>24</td><td class="ta">ItemReceta</td><td>IdReceta</td><td class="tb">Receta</td><td><span class="badge-1n">N:1</span></td><td>Una receta contiene múltiples medicamentos</td></tr>
-      <tr><td>25</td><td class="ta">ItemReceta</td><td>IdMedicamento</td><td class="tb">Medicamento</td><td><span class="badge-1n">N:1</span></td><td>Referencia al catálogo de medicamentos</td></tr>
-      <tr><td>26</td><td class="ta">Comprobante ★</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td><strong>Nuevo:</strong> Reemplaza Factura — soporta Boleta y Factura</td></tr>
-      <tr><td>27</td><td class="ta">Pago</td><td>IdComprobante</td><td class="tb">Comprobante</td><td><span class="badge-1n">N:1</span></td><td>Un comprobante puede tener múltiples pagos parciales</td></tr>
+      <tr><td>1</td><td class="ta">Usuario</td><td>IdRol</td><td class="tb">Rol</td><td><span class="badge-1n">N:1</span></td><td>Muchos usuarios comparten el mismo rol (Admin, Médico, Paciente). El rol determina permisos de acceso al sistema</td></tr>
+      <tr><td>2</td><td class="ta">Contacto</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-1n">N:1</span></td><td>Un usuario puede registrar múltiples datos de contacto (celular, email, teléfono fijo) sin límite fijo de columnas</td></tr>
+      <tr><td>3</td><td class="ta">Medico</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-11">1:1</span></td><td>Cada médico es exactamente un usuario del sistema con credenciales de acceso (UQ garantiza que un usuario no sea dos médicos)</td></tr>
+      <tr><td>4</td><td class="ta">Paciente</td><td>IdUsuario</td><td class="tb">Usuario</td><td><span class="badge-11">1:1</span></td><td>Cada paciente es exactamente un usuario del sistema. Un usuario no puede ser simultáneamente paciente y médico</td></tr>
+      <tr><td>5</td><td class="ta">Paciente</td><td>IdTipoAsegurado</td><td class="tb">TipoAsegurado</td><td><span class="badge-1n">N:1</span></td><td>Clasifica al paciente como particular, asegurado o corporativo. Determina flujos de facturación y coberturas aplicables</td></tr>
+      <tr><td>6</td><td class="ta">Paciente</td><td>IdEmpresa</td><td class="tb">Empresa</td><td><span class="badge-1n">N:1</span></td><td>Opcional (NULL). Solo para pacientes corporativos cuya empresa paga la consulta. Permite generar facturas a la empresa</td></tr>
+      <tr style="background:#eff6ff"><td>7</td><td class="ta" style="color:#1d4ed8">ColegioMedico ★v3</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo v3:</strong> Un médico puede tener registros en varios colegios (CMP Lima, CMP Arequipa). Tabla separada permite historizar y validar colegiatura vigente</td></tr>
+      <tr style="background:#eff6ff"><td>8</td><td class="ta" style="color:#1d4ed8">MedicoEspecialidad ★v3</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo v3:</strong> Habilitación formal del médico para ejercer una especialidad. Restringe con UQ (IdMedico, IdEspecialidad) para evitar duplicados</td></tr>
+      <tr style="background:#eff6ff"><td>9</td><td class="ta" style="color:#1d4ed8">MedicoEspecialidad ★v3</td><td>IdEspecialidad</td><td class="tb">Especialidad</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo v3:</strong> Vincula la habilitación con el catálogo de especialidades. Permite validar que la especialidad de la cita sea una que el médico esté habilitado para atender</td></tr>
+      <tr><td>10</td><td class="ta">Tarifa</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico puede tener tarifas diferenciadas por especialidad. Esta tabla implementa la relación M:N entre Médico y Especialidad con atributo Monto</td></tr>
+      <tr><td>11</td><td class="ta">Tarifa</td><td>IdEspecialidad</td><td class="tb">Especialidad</td><td><span class="badge-1n">N:1</span></td><td>Cada tarifa está asociada a la especialidad consultada. El par (IdMedico, IdEspecialidad) debería ser único para evitar tarifas duplicadas</td></tr>
+      <tr><td>12</td><td class="ta">HorarioMedico</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico tiene múltiples bloques horarios semanales. Permite verificar disponibilidad antes de agendar una cita</td></tr>
+      <tr><td>13</td><td class="ta">HorarioMedico</td><td>IdConsultorio</td><td class="tb">Consultorio</td><td><span class="badge-1n">N:1</span></td><td>Cada bloque horario asigna al médico a un consultorio específico. Evita conflictos de espacio físico entre médicos</td></tr>
+      <tr style="background:#f0fdf4"><td>14</td><td class="ta" style="color:#059669">PacienteSeguro ★v3</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo v3:</strong> Un paciente puede estar afiliado a múltiples seguros activos. Tabla intermedia M:N que almacena número de póliza, vigencia y cobertura máxima por contrato</td></tr>
+      <tr style="background:#f0fdf4"><td>15</td><td class="ta" style="color:#059669">PacienteSeguro ★v3</td><td>IdSeguro</td><td class="tb">Seguro</td><td><span class="badge-1n">N:1</span></td><td><strong>Nuevo v3:</strong> Referencia al catálogo de aseguradoras (EsSalud, SIS, Rímac, etc.). Un mismo seguro puede cubrir a miles de pacientes sin duplicar su nombre</td></tr>
+      <tr><td>16</td><td class="ta">Cita</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td>Un paciente puede tener muchas citas a lo largo del tiempo. FK núcleo del sistema de agendamiento</td></tr>
+      <tr><td>17</td><td class="ta">Cita</td><td>IdMedico</td><td class="tb">Medico</td><td><span class="badge-1n">N:1</span></td><td>Un médico puede atender muchas citas. Con IdEspecialidad en la misma cita se puede validar que el médico esté habilitado para esa especialidad</td></tr>
+      <tr><td>18</td><td class="ta">Cita</td><td>IdEspecialidad ★</td><td class="tb">Especialidad</td><td><span class="badge-1n">N:1</span></td><td><strong>Obs. #6:</strong> Registra la especialidad consultada para reportes, filtros y validación médico-especialidad. Esencial para estadísticas por área médica</td></tr>
+      <tr><td>19</td><td class="ta">Cita</td><td>IdTarifa</td><td class="tb">Tarifa</td><td><span class="badge-1n">N:1</span></td><td>Tarifa aplicada en la cita (NULL si es gratuita o especial). Determina el monto base del Comprobante generado</td></tr>
+      <tr><td>20</td><td class="ta">Cita</td><td>IdEstadoCita</td><td class="tb">EstadoCita</td><td><span class="badge-1n">N:1</span></td><td>Estado del ciclo de vida de la cita: Pendiente → Confirmada → Atendida / Cancelada. Catálogo permite agregar estados sin migración</td></tr>
+      <tr><td>21</td><td class="ta">Cita</td><td>IdConsultorio</td><td class="tb">Consultorio</td><td><span class="badge-1n">N:1</span></td><td>Consultorio asignado a la cita. Con HorarioMedico se puede validar que el médico esté en ese consultorio a esa hora</td></tr>
+      <tr><td>22</td><td class="ta">Cita</td><td>IdTipoConsulta</td><td class="tb">TipoConsulta</td><td><span class="badge-1n">N:1</span></td><td>Primera vez, seguimiento o urgencia. Puede aplicar TarifaExtra sobre la tarifa base del médico</td></tr>
+      <tr><td>23</td><td class="ta">CancelacionCita</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Registro permanente de la cancelación con motivo, responsable y fecha. UQ garantiza que cada cita cancelada tenga exactamente un registro de cancelación</td></tr>
+      <tr><td>24</td><td class="ta">Triaje</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Signos vitales tomados antes de la consulta. 1:1 porque cada cita tiene un solo triaje. Se registra incluso si la consulta no procede</td></tr>
+      <tr><td>25</td><td class="ta">HistorialClinico</td><td>IdPaciente</td><td class="tb">Paciente</td><td><span class="badge-1n">N:1</span></td><td>Historial acumulado por paciente a lo largo del tiempo. Permite ver toda la trayectoria clínica del paciente en una sola consulta</td></tr>
+      <tr><td>26</td><td class="ta">HistorialClinico</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-1n">N:1</span></td><td>Cada entrada de historial se vincula a la cita que la originó. Permite trazar el diagnóstico y tratamiento exactos de cada consulta</td></tr>
+      <tr><td>27</td><td class="ta">Receta</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td>Una cita genera como máximo una receta médica. 1:1 garantizado por UQ en IdCita. Los medicamentos van en ItemReceta</td></tr>
+      <tr><td>28</td><td class="ta">ItemReceta</td><td>IdReceta</td><td class="tb">Receta</td><td><span class="badge-1n">N:1</span></td><td>Una receta contiene múltiples líneas de medicamentos. Permite prescribir dosis, frecuencia y duración individualizadas por medicamento</td></tr>
+      <tr><td>29</td><td class="ta">ItemReceta</td><td>IdMedicamento</td><td class="tb">Medicamento</td><td><span class="badge-1n">N:1</span></td><td>Referencia al catálogo de medicamentos. Mantiene datos actualizados de precio, stock y presentación sin duplicar en la receta</td></tr>
+      <tr><td>30</td><td class="ta">Comprobante ★</td><td>IdCita</td><td class="tb">Cita</td><td><span class="badge-11">1:1</span></td><td><strong>Obs. #7 + v3:</strong> Cada cita genera un único comprobante (Boleta o Factura). Incluye MetodoPago, NroOperacion y FechaPago directamente, eliminando las tablas Pago y MetodoPago</td></tr>
     </tbody>
   </table>
 </div>
@@ -670,7 +772,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
     <div class="stack-card">
       <div class="ico">🔵</div>
       <div><h4>SQL Server (T-SQL)</h4>
-      <p>26 tablas SINGULAR, FK constraints, índices, IDENTITY, procedimientos con SeedData de 100 registros</p></div>
+      <p>26 tablas SINGULAR, 30 FK constraints, índices, IDENTITY, PacienteSeguro/ColegioMedico/MedicoEspecialidad nuevas, SeedData de 100+ registros</p></div>
     </div>
     <div class="stack-card">
       <div class="ico">⚛️</div>
@@ -702,8 +804,8 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4ff;color:#1e293b;f
 
 <!-- ══ FOOTER ══ -->
 <div class="footer">
-  <p><strong>ClinicaDB v2</strong> · Sistema de Gestión de Citas Médicas · IDAT 5to Ciclo · Desarrollo de Servicios Web · 2024</p>
-  <p style="margin-top:6px;opacity:.6">26 tablas · 27 relaciones FK · 8 observaciones del profesor aplicadas · .NET 8 + React + SQL Server</p>
+  <p><strong>ClinicaDB v3</strong> · Sistema de Gestión de Citas Médicas · IDAT 5to Ciclo · Desarrollo de Servicios Web · 2025</p>
+  <p style="margin-top:6px;opacity:.6">26 tablas · 30 relaciones FK · 13 observaciones del profesor aplicadas · .NET 8 + React + SQL Server</p>
 </div>
 
 </body>
